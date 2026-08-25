@@ -1,0 +1,6 @@
+{
+  "name": "إذاعات القرآن الكريم",
+  "description": "استمع إلى إذاعات القرآن الكريم ومحطات البث المباشر لأشهر القراء من مختلف دول العالم الإسلامي على مدار 24 ساعة.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

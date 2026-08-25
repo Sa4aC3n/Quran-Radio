@@ -1,0 +1,53 @@
+package com.example.model
+
+enum class StationCategory(val titleAr: String) {
+    QURAN("إذاعات القرآن الكريم"),
+    OFFICIAL("إذاعات رسمية"),
+    RECITER("محطات القراء"),
+    TAFSIR("التفسير وعلوم القرآن"),
+    TAFSEER("التفسير وعلوم القرآن"),
+    SEERAH_AND_STORIES("السيرة والقصص"),
+    SEERAH("السيرة والقصص"),
+    RUQYAH("الرقية الشرعية"),
+    ROQIAH("الرقية الشرعية"),
+    FATWA("الفتاوى"),
+    FATAWA("الفتاوى"),
+    TRANSLATION("ترجمة معاني القرآن الكريم"),
+    RECITATION("تلاوات خاشعة"),
+    ADHKAR("أذكار وأدعية"),
+    SUNNAH("السنة النبوية"),
+    ISLAMIC("إذاعات إسلامية عامة")
+}
+
+data class RadioStation(
+    val id: String,
+    val name: String,
+    val country: String,
+    val countryCode: String,
+    val city: String = "",
+    val category: StationCategory = StationCategory.QURAN,
+    val reciter: String? = null,
+    val reciterId: String? = null,
+    val streamUrl: String,
+    val fallbackStreamUrl: String? = null,
+    val streams: List<StationStream> = emptyList(),
+    val nameAr: String = name,
+    val nameEn: String = "",
+    val stationType: String = "LIVE_RADIO",
+    val sourceName: String = "Quran Radio World",
+    val sourceWebsite: String = "https://www.atheer-radio.com/library",
+    val sourceUrl: String = "",
+    val isVerified: Boolean = true,
+    val streamStatus: String = "ONLINE",
+    val lastCheckedAt: Long = System.currentTimeMillis(),
+    val lastSuccessfulCheckAt: Long = System.currentTimeMillis(),
+    val healthScore: Int = 100,
+    val logoUrl: String = "",
+    val description: String = "",
+    val isFavorite: Boolean = false,
+    val isActive: Boolean = true,
+    val bitrate: String = "128 kbps",
+    val isFeatured: Boolean = false,
+    val priority: Int = 0,
+    val listenCount: Long = 0L
+)

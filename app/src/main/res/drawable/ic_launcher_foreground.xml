@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Radio antenna & central tower / minaret shape -->
+    <!-- Sound Waves / Broadcast rings -->
+    <path
+        android:strokeColor="#E0F7FA"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M38,40 C42,35 48,32 54,32 C60,32 66,35 70,40" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M30,32 C37,25 45,21 54,21 C63,21 71,25 78,32" />
+
+    <!-- Radio / Minaret Spire & Crescent -->
+    <!-- Crescent Moon at Top -->
+    <path
+        android:fillColor="#FFD166"
+        android:pathData="M54,12 C52.5,12 50.8,12.5 49.5,13.5 C52.5,14.5 54.5,17.2 54.5,20.5 C54.5,23.8 52.5,26.5 49.5,27.5 C50.8,28.5 52.5,29 54,29 C58.7,29 62.5,25.2 62.5,20.5 C62.5,15.8 58.7,12 54,12 Z" />
+
+    <!-- Radio Tower Body / Islamic Dome -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,36 C46,36 41,43 41,51 L67,51 C67,43 62,36 54,36 Z" />
+
+    <!-- Radio Sound Wave Equalizer Bars -->
+    <path
+        android:fillColor="#EAF8FF"
+        android:pathData="M44,48 L46,48 L46,44 L44,44 Z M50,48 L52,48 L52,41 L50,41 Z M56,48 L58,48 L58,41 L56,41 Z M62,48 L64,48 L64,44 L62,44 Z" />
+
+    <!-- Open Quran Book Silhouette at the base -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,58 L54,78 C50,74.5 43,73 34,74 C33.4,74 33,74.5 33,75.1 L33,83.5 C33,84.2 33.6,84.7 34.3,84.6 C42.5,83.5 49,85 53.5,88.5 C53.8,88.7 54.2,88.7 54.5,88.5 C59,85 65.5,83.5 73.7,84.6 C74.4,84.7 75,84.2 75,83.5 L75,75.1 C75,74.5 74.6,74 74,74 C65,73 58,74.5 54,78 Z" />
+
+    <!-- Book spine highlight & bookmark accent -->
+    <path
+        android:fillColor="#5BC0EB"
+        android:pathData="M52.5,58 L55.5,58 L55.5,74 L54,72.5 L52.5,74 Z" />
+</vector>
