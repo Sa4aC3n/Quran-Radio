@@ -27,6 +27,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.localization.StringKey
+import com.example.localization.appString
 import com.example.model.PlaybackStatus
 import com.example.ui.theme.LiveCoral
 import com.example.ui.theme.NavyMuted
@@ -40,8 +42,36 @@ import com.example.ui.theme.StatusError
 @Composable
 fun LiveStatusBadge(
     status: PlaybackStatus,
+    isAutoRetrying: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    if (isAutoRetrying) {
+        Row(
+            modifier = modifier
+                .clip(RoundedCornerShape(12.dp))
+                .background(StatusConnecting.copy(alpha = 0.18f))
+                .padding(horizontal = 8.dp, vertical = 3.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(7.dp)
+                    .clip(CircleShape)
+                    .background(StatusConnecting)
+            )
+            Spacer(modifier = Modifier.width(5.dp))
+            Text(
+                text = appString(StringKey.PLAYER_STATUS_RECONNECTING),
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = StatusConnecting,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 10.sp
+                )
+            )
+        }
+        return
+    }
+
     when (status) {
         PlaybackStatus.PLAYING -> {
             val infiniteTransition = rememberInfiniteTransition(label = "pulse")
@@ -71,7 +101,7 @@ fun LiveStatusBadge(
                 )
                 Spacer(modifier = Modifier.width(5.dp))
                 Text(
-                    text = "جاري التشغيل",
+                    text = appString(StringKey.PLAYER_STATUS_PLAYING),
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = NavyPrimary,
                         fontWeight = FontWeight.Bold,
@@ -96,7 +126,7 @@ fun LiveStatusBadge(
                 )
                 Spacer(modifier = Modifier.width(5.dp))
                 Text(
-                    text = "جارٍ الاتصال...",
+                    text = appString(StringKey.PLAYER_STATUS_BUFFERING),
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = StatusConnecting,
                         fontWeight = FontWeight.Bold,
@@ -121,7 +151,7 @@ fun LiveStatusBadge(
                 )
                 Spacer(modifier = Modifier.width(5.dp))
                 Text(
-                    text = "البث غير متاح",
+                    text = appString(StringKey.PLAYER_STATUS_ERROR),
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = StatusError,
                         fontWeight = FontWeight.Bold,
@@ -146,7 +176,7 @@ fun LiveStatusBadge(
                 )
                 Spacer(modifier = Modifier.width(5.dp))
                 Text(
-                    text = "متوقف مؤقتًا",
+                    text = appString(StringKey.PLAYER_STATUS_PAUSED),
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = NavyMuted,
                         fontWeight = FontWeight.Bold,
@@ -171,7 +201,7 @@ fun LiveStatusBadge(
                 )
                 Spacer(modifier = Modifier.width(5.dp))
                 Text(
-                    text = "مباشر 24/7",
+                    text = appString(StringKey.HOME_LIVE_NOW),
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = LiveCoral,
                         fontWeight = FontWeight.Bold,
@@ -204,3 +234,4 @@ fun QualityBadge(
         )
     }
 }
+

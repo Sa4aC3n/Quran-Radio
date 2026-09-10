@@ -33,6 +33,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.localization.LocalAppLanguage
+import com.example.localization.StringKey
+import com.example.localization.appString
+import com.example.localization.localizedName
 import com.example.model.RadioStation
 import com.example.ui.components.StationCard
 import com.example.ui.theme.SkyBluePrimary
@@ -51,12 +55,15 @@ fun CountryDetailScreen(
     val stations = viewModel.getStationsForCountry(countryCode)
     val playerState by viewModel.playerState.collectAsState()
 
+    val currentLang = LocalAppLanguage.current
+    val countryDisplayName = country?.localizedName(currentLang) ?: appString(StringKey.COUNTRIES_TITLE)
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = country?.nameAr ?: "إذاعات الدولة",
+                        text = countryDisplayName,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -65,7 +72,7 @@ fun CountryDetailScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "رجوع",
+                            contentDescription = appString(StringKey.NAV_BACK),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -110,14 +117,14 @@ fun CountryDetailScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "إذاعات ${country?.nameAr ?: ""}",
+                            text = "${appString(StringKey.COUNTRY_DETAIL_STATIONS_TITLE)} $countryDisplayName",
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                         )
                         Text(
-                            text = "${stations.size} محطة إذاعية رسمية ومباشرة",
+                            text = appString(StringKey.COUNTRIES_STATIONS_COUNT, stations.size),
                             style = MaterialTheme.typography.bodySmall.copy(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontWeight = FontWeight.Medium
@@ -150,3 +157,4 @@ fun CountryDetailScreen(
         }
     }
 }
+

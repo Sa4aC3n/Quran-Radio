@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -41,6 +42,12 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.localization.LocalAppLanguage
+import com.example.localization.StationTranslator
+import com.example.localization.StringKey
+import com.example.localization.appString
+import com.example.localization.localizedName
+import com.example.model.PlaybackStatus
 import com.example.model.Reciter
 import com.example.ui.components.ReciterCard
 import com.example.ui.theme.PureWhite
@@ -56,23 +63,36 @@ fun RecitersScreen(
 ) {
     val reciters by viewModel.reciters.collectAsState()
     val allStations by viewModel.allStations.collectAsState()
+    val playerState by viewModel.playerState.collectAsState()
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedStyleFilter by remember { mutableStateOf<String?>(null) }
 
     val styles = listOf(
-        null to "الكل",
-        "مرتل" to "المصحف المرتل",
-        "مجود" to "المصحف المجود",
-        "أئمة الحرمين" to "أئمة الحرمين"
+        null to appString(StringKey.CAT_ALL),
+        "مرتل" to appString(StringKey.RECITERS_STYLE_MURATTAL),
+        "مجود" to appString(StringKey.RECITERS_STYLE_MUJAWWAD),
+        "أئمة الحرمين" to appString(StringKey.RECITERS_STYLE_HARAMAIN)
     )
 
+    val currentLang = LocalAppLanguage.current
+
     val filteredReciters = reciters.filter { reciter ->
+        val localizedName = reciter.localizedName(currentLang)
         val matchesSearch = searchQuery.isBlank() ||
+                localizedName.contains(searchQuery.trim(), ignoreCase = true) ||
                 reciter.nameAr.contains(searchQuery.trim(), ignoreCase = true) ||
                 reciter.nameEn.contains(searchQuery.trim(), ignoreCase = true)
 
-        val matchesStyle = selectedStyleFilter == null || reciter.styleAr.contains(selectedStyleFilter ?: "")
+        val matchesStyle = when (selectedStyleFilter) {
+            null -> true
+            "أئمة الحرمين" -> reciter.styleAr.contains("الحرم") || 
+                    reciter.styleAr.contains("الحرمين") || 
+                    reciter.bioAr.contains("الحرم") || 
+                    reciter.bioAr.contains("المسجد الحرام") || 
+                    reciter.bioAr.contains("المسجد النبوي")
+            else -> reciter.styleAr.contains(selectedStyleFilter ?: "")
+        }
         matchesSearch && matchesStyle
     }
 
@@ -81,7 +101,7 @@ fun RecitersScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "إذاعات كبار القراء",
+                        text = appString(StringKey.RECITERS_TITLE),
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -92,14 +112,15 @@ fun RecitersScreen(
             )
         },
         containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         modifier = modifier
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(top = innerPadding.calculateTopPadding())
                 .testTag("reciters_list"),
-            contentPadding = PaddingValues(bottom = 90.dp)
+            contentPadding = PaddingValues(bottom = 16.dp)
         ) {
             // Search Bar & Filter Header
             item {
@@ -113,7 +134,7 @@ fun RecitersScreen(
                             .testTag("reciters_search_input"),
                         placeholder = {
                             Text(
-                                text = "ابحث عن اسم القارئ...",
+                                text = appString(StringKey.RECITERS_SEARCH_PLACEHOLDER),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                                 style = MaterialTheme.typography.bodyMedium
                             )
@@ -121,7 +142,7 @@ fun RecitersScreen(
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Search,
-                                contentDescription = "بحث",
+                                contentDescription = appString(StringKey.SEARCH),
                                 tint = SkyBluePrimary
                             )
                         },
@@ -130,7 +151,7 @@ fun RecitersScreen(
                                 IconButton(onClick = { searchQuery = "" }) {
                                     Icon(
                                         imageVector = Icons.Default.Clear,
-                                        contentDescription = "مسح البحث",
+                                        contentDescription = appString(StringKey.SEARCH_CLEAR),
                                         tint = MaterialTheme.colorScheme.onSurface
                                     )
                                 }
@@ -186,14 +207,30 @@ fun RecitersScreen(
 
             // Reciters Items
             items(filteredReciters, key = { it.id }) { reciter ->
+                val reciterStation = allStations.find { s ->
+                    s.reciterId == reciter.id ||
+                            (s.reciter != null && s.reciter.contains(reciter.nameAr, ignoreCase = true)) ||
+                            s.name.contains(reciter.nameAr, ignoreCase = true)
+                }
+                val isCurrentReciter = playerState.currentStation != null && (
+                        playerState.currentStation?.reciterId == reciter.id ||
+                                (reciterStation != null && playerState.currentStation?.id == reciterStation.id) ||
+                                (playerState.currentStation?.reciter?.contains(reciter.nameAr, ignoreCase = true) == true) ||
+                                (playerState.currentStation?.name?.contains(reciter.nameAr, ignoreCase = true) == true)
+                        )
+                val playbackStatus = if (isCurrentReciter) playerState.status else PlaybackStatus.IDLE
+
                 Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 5.dp)) {
                     ReciterCard(
                         reciter = reciter,
+                        isCurrentReciter = isCurrentReciter,
+                        playbackStatus = playbackStatus,
                         onReciterClick = { onReciterClick(reciter) },
                         onPlayReciterLive = {
-                            val station = allStations.find { s -> s.reciterId == reciter.id }
-                            if (station != null) {
-                                viewModel.playStation(station)
+                            if (isCurrentReciter) {
+                                viewModel.togglePlayPause()
+                            } else if (reciterStation != null) {
+                                viewModel.playStation(reciterStation)
                             }
                         }
                     )

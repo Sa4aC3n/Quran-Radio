@@ -4,6 +4,7 @@ import com.example.model.Country
 import com.example.model.RadioStation
 import com.example.model.Reciter
 import com.example.model.StationCategory
+import com.example.model.StationStream
 
 object DefaultStationsData {
 
@@ -33,6 +34,36 @@ object DefaultStationsData {
     )
 
     val STATIONS = listOf(
+        RadioStation(
+            id = "haram_makkah_live",
+            name = "إذاعة تلاوات الحرم المكي الشريف - بث مباشر 🕋",
+            country = "المملكة العربية السعودية",
+            countryCode = "SA",
+            city = "مكة المكرمة",
+            category = StationCategory.OFFICIAL,
+            streamUrl = "https://backup.qurango.net/radio/mix",
+            fallbackStreamUrl = "https://qurango.net/radio/mix",
+            logoUrl = "https://images.unsplash.com/photo-1565552645632-d725f8bfc19a?w=400&q=80",
+            description = "البث المباشر لتلاوات وصلوات الحرم المكي الشريف بمكة المكرمة على مدار 24 ساعة.",
+            bitrate = "128 kbps",
+            isFeatured = true,
+            priority = 101
+        ),
+        RadioStation(
+            id = "haram_madinah_live",
+            name = "إذاعة تلاوات المسجد النبوي الشريف - بث مباشر 🕌",
+            country = "المملكة العربية السعودية",
+            countryCode = "SA",
+            city = "المدينة المنورة",
+            category = StationCategory.OFFICIAL,
+            streamUrl = "https://backup.qurango.net/radio/saheh-bokharee",
+            fallbackStreamUrl = "https://backup.qurango.net/radio/tarateel",
+            logoUrl = "https://images.unsplash.com/photo-1590076215667-875d4ef2d7ee?w=400&q=80",
+            description = "البث المباشر لتلاوات وصلوات المسجد النبوي الشريف بالمدينة المنورة على مدار 24 ساعة.",
+            bitrate = "128 kbps",
+            isFeatured = true,
+            priority = 100
+        ),
         RadioStation(
             id = "cairo_quran",
             name = "إذاعة القرآن الكريم من القاهرة",
@@ -2241,6 +2272,23 @@ object DefaultStationsData {
             priority = 95
         ),
         RadioStation(
+            id = "station_mukhtasartafsir_english",
+            name = "إذاعة المختصر في تفسير القرآن الكريم (باللغة الإنجليزية)",
+            nameAr = "إذاعة المختصر في تفسير القرآن الكريم (باللغة الإنجليزية)",
+            nameEn = "Al-Mukhtasar in Quran Tafsir Radio (English)",
+            country = "المملكة العربية السعودية",
+            countryCode = "SA",
+            city = "الرياض",
+            category = StationCategory.TAFSIR,
+            streamUrl = "https://backup.qurango.net/radio/mokhtasr-english",
+            fallbackStreamUrl = "https://qurango.net/radio/mokhtasr-english",
+            logoUrl = "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&q=80",
+            description = "بث مباشر لكتاب المختصر في تفسير القرآن الكريم مترجماً إلى اللغة الإنجليزية الصادر عن مركز تفسير للدراسات القرآنية.",
+            bitrate = "128 kbps",
+            isFeatured = true,
+            priority = 95
+        ),
+        RadioStation(
             id = "station_athkar_sabah",
             name = "إذاعة أذكار الصباح",
             country = "المملكة العربية السعودية",
@@ -3052,7 +3100,7 @@ object DefaultStationsData {
             id = "shuraim",
             nameAr = "الشيخ سعود الشريم",
             nameEn = "Saud Al-Shuraim",
-            styleAr = "إمام الحرم المكي السابق",
+            styleAr = "أئمة الحرمين - إمام الحرم المكي السابق",
             country = "المملكة العربية السعودية",
             stationId = "reciter_saud_alshuraim",
             hasLiveStream = true,
@@ -3195,7 +3243,7 @@ object DefaultStationsData {
             id = "sudais",
             nameAr = "الشيخ عبد الرحمن السديس",
             nameEn = "Abdulrahman Al-Sudais",
-            styleAr = "إمام الحرم المكي",
+            styleAr = "أئمة الحرمين - إمام الحرم المكي",
             country = "المملكة العربية السعودية",
             stationId = "reciter_abdulrahman_alsudaes",
             hasLiveStream = true,
@@ -3525,7 +3573,7 @@ object DefaultStationsData {
             id = "muaiqly",
             nameAr = "الشيخ ماهر المعيقلي",
             nameEn = "Maher Al-Muaiqly",
-            styleAr = "إمام الحرم المكي",
+            styleAr = "أئمة الحرمين - إمام الحرم المكي",
             country = "المملكة العربية السعودية",
             stationId = "reciter_maher",
             hasLiveStream = true,
@@ -4086,12 +4134,12 @@ object DefaultStationsData {
             id = "bandar_balilah",
             nameAr = "الشيخ بندر بليلة",
             nameEn = "Bandar Balilah",
-            styleAr = "مرتل",
+            styleAr = "أئمة الحرمين - إمام المسجد الحرام",
             country = "المملكة العربية السعودية",
             stationId = "reciter_bandar_balilah",
             hasLiveStream = true,
             avatarUrl = "https://images.unsplash.com/photo-1565552645632-d725f8bfc19a?w=400&q=80",
-            bioAr = "قارئ ومقرئ للقرآن الكريم، يتميز بتلاوات عذبة ومتقنة برواية حفص عن عاصم والقراءات المتواترة."
+            bioAr = "إمام وخطيب المسجد الحرام بمكة المكرمة وعضو هيئة كبار العلماء بالمملكة العربية السعودية."
         ),
         Reciter(
             id = "nasser_alosfor",
@@ -4195,24 +4243,24 @@ object DefaultStationsData {
         Reciter(
             id = "a_binhameed",
             nameAr = "الشيخ أحمد طالب بن حميد",
-            nameEn = "A Binhameed",
-            styleAr = "مرتل",
+            nameEn = "Ahmad Talib Bin Humaid",
+            styleAr = "أئمة الحرمين - إمام المسجد النبوي",
             country = "المملكة العربية السعودية",
             stationId = "reciter_a_binhameed",
             hasLiveStream = true,
             avatarUrl = "https://images.unsplash.com/photo-1590076215667-875d4ef2d7ee?w=400&q=80",
-            bioAr = "قارئ ومقرئ للقرآن الكريم، يتميز بتلاوات عذبة ومتقنة برواية حفص عن عاصم والقراءات المتواترة."
+            bioAr = "إمام وخطيب المسجد النبوي الشريف بالمدينة المنورة وأحد أئمة الحرمين الشريفين المتميزين بعذوبة التلاوة."
         ),
         Reciter(
             id = "bader",
             nameAr = "الشيخ بدر التركي",
-            nameEn = "Bader",
-            styleAr = "مرتل",
+            nameEn = "Bader Al-Turki",
+            styleAr = "أئمة الحرمين - إمام المسجد الحرام",
             country = "المملكة العربية السعودية",
             stationId = "reciter_bader",
             hasLiveStream = true,
             avatarUrl = "https://images.unsplash.com/photo-1564769625905-50e93615e769?w=400&q=80",
-            bioAr = "قارئ ومقرئ للقرآن الكريم، يتميز بتلاوات عذبة ومتقنة برواية حفص عن عاصم والقراءات المتواترة."
+            bioAr = "إمام المسجد الحرام بمكة المكرمة وقارئ متميز يتمتع بتلاوات خاشعة ومتقنة."
         ),
         Reciter(
             id = "hazza",

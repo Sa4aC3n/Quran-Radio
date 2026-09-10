@@ -18,10 +18,11 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.util.concurrent.TimeUnit
 
-class RadioRepository(private val context: Context) {
+class RadioRepository(context: Context) {
 
+    private val appContext = context.applicationContext
     private val scope = CoroutineScope(Dispatchers.IO)
-    private val importer = AtheerRadioImporter(context)
+    private val importer = AtheerRadioImporter(appContext)
 
     private val _stations = MutableStateFlow<List<RadioStation>>(DefaultStationsData.STATIONS)
     val stations: Flow<List<RadioStation>> = _stations.asStateFlow()

@@ -6,16 +6,22 @@ import androidx.lifecycle.viewModelScope
 import com.example.QuranRadioApplication
 import com.example.model.AppThemeMode
 import com.example.model.Country
+import com.example.model.HaramLivePreferences
+import com.example.model.HaramSource
 import com.example.model.PlayerState
 import com.example.model.RadioStation
 import com.example.model.Reciter
 import com.example.model.StationCategory
+import com.example.model.WeeklyListeningSummary
+import com.example.services.HaramLiveNotificationHelper
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -24,12 +30,23 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
     private val app = application as QuranRadioApplication
     private val radioRepository = app.radioRepository
     private val userPreferencesRepository = app.userPreferencesRepository
+    private val haramPreferencesRepository = app.haramPreferencesRepository
+    private val listeningStatsRepository = app.listeningStatsRepository
     private val playerManager = app.playerManager
+
+    val haramLivePreferences: StateFlow<HaramLivePreferences> = haramPreferencesRepository.preferences
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HaramLivePreferences())
 
     val playerState: StateFlow<PlayerState> = playerManager.playerState
 
+    val weeklyListeningSummary: StateFlow<WeeklyListeningSummary> = listeningStatsRepository.getWeeklyListeningStats()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), WeeklyListeningSummary())
+
     val themeMode: StateFlow<AppThemeMode> = userPreferencesRepository.themeMode
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AppThemeMode.LIGHT)
+
+    val appLanguage: StateFlow<com.example.localization.AppLanguage> = userPreferencesRepository.appLanguage
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), com.example.localization.AppLanguage.AR)
 
     val favoriteIds: StateFlow<Set<String>> = userPreferencesRepository.favoriteStationIds
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
@@ -46,11 +63,20 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
     val isNotificationsEnabled: StateFlow<Boolean> = userPreferencesRepository.isNotificationsEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
+    val notificationFrequency: StateFlow<String> = userPreferencesRepository.notificationFrequency
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "all")
+
+    val notificationTimeWindow: StateFlow<String> = userPreferencesRepository.notificationTimeWindow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "all_day")
+
     val preferredAudioQuality: StateFlow<String> = userPreferencesRepository.preferredAudioQuality
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "high")
 
     val countries: StateFlow<List<Country>> = radioRepository.countries
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val countriesGridColumns: StateFlow<Int> = userPreferencesRepository.countriesGridColumns
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 3)
 
     val reciters: StateFlow<List<Reciter>> = radioRepository.reciters
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -62,15 +88,15 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
         stationsList.map { station ->
             station.copy(isFavorite = favSet.contains(station.id))
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val favoriteStations: StateFlow<List<RadioStation>> = allStations.combine(favoriteIds) { stations, _ ->
         stations.filter { it.isFavorite }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val featuredStations: StateFlow<List<RadioStation>> = allStations.combine(favoriteIds) { stations, _ ->
         stations.filter { it.isFeatured }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Search and Filter state
     val searchQuery = MutableStateFlow("")
@@ -97,21 +123,26 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
                 true
             } else {
                 station.name.contains(trimmed, ignoreCase = true) ||
+                        station.nameEn.contains(trimmed, ignoreCase = true) ||
+                        station.nameAr.contains(trimmed, ignoreCase = true) ||
                         station.country.contains(trimmed, ignoreCase = true) ||
                         station.city.contains(trimmed, ignoreCase = true) ||
                         (station.reciter?.contains(trimmed, ignoreCase = true) == true) ||
-                        station.description.contains(trimmed, ignoreCase = true)
+                        station.description.contains(trimmed, ignoreCase = true) ||
+                        com.example.localization.AppLanguage.entries.any { lang ->
+                            com.example.localization.StationTranslator.getStationName(station, lang).contains(trimmed, ignoreCase = true)
+                        }
             }
             matchesCategory && matchesQuery
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
         checkAutoPlayOnStartup()
     }
 
     private fun checkAutoPlayOnStartup() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val autoPlay = userPreferencesRepository.isAutoPlayEnabled.first()
             if (autoPlay) {
                 val lastId = userPreferencesRepository.lastPlayedStationId.first()
@@ -158,7 +189,7 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun toggleFavorite(stationId: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             userPreferencesRepository.toggleFavorite(stationId)
         }
     }
@@ -172,38 +203,62 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun setAutoPlay(enabled: Boolean) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             userPreferencesRepository.setAutoPlay(enabled)
         }
     }
 
     fun setBackgroundPlay(enabled: Boolean) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             userPreferencesRepository.setBackgroundPlay(enabled)
         }
     }
 
     fun setWifiOnly(enabled: Boolean) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             userPreferencesRepository.setWifiOnly(enabled)
         }
     }
 
     fun setNotificationsEnabled(enabled: Boolean) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             userPreferencesRepository.setNotificationsEnabled(enabled)
         }
     }
 
+    fun setNotificationFrequency(frequency: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            userPreferencesRepository.setNotificationFrequency(frequency)
+        }
+    }
+
+    fun setNotificationTimeWindow(window: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            userPreferencesRepository.setNotificationTimeWindow(window)
+        }
+    }
+
     fun setAudioQuality(quality: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             userPreferencesRepository.setPreferredAudioQuality(quality)
         }
     }
 
     fun setThemeMode(mode: AppThemeMode) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             userPreferencesRepository.setThemeMode(mode)
+        }
+    }
+
+    fun setAppLanguage(language: com.example.localization.AppLanguage) {
+        viewModelScope.launch(Dispatchers.IO) {
+            userPreferencesRepository.setAppLanguage(language)
+        }
+    }
+
+    fun setCountriesGridColumns(columns: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            userPreferencesRepository.setCountriesGridColumns(columns)
         }
     }
 
@@ -226,7 +281,7 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     fun syncAtheerRadios() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             radioRepository.syncWithAtheerLive()
         }
     }
@@ -253,5 +308,51 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
 
     fun deleteStation(stationId: String) {
         radioRepository.deleteStation(stationId)
+    }
+
+    // Haram Live "Now Reciting in Haram" Methods
+    fun setHaramLiveEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            haramPreferencesRepository.setEnabled(enabled)
+        }
+    }
+
+    fun setHaramLiveSource(source: HaramSource) {
+        viewModelScope.launch {
+            haramPreferencesRepository.setSource(source)
+        }
+    }
+
+    fun setHaramLiveFavoriteOnly(favoriteOnly: Boolean) {
+        viewModelScope.launch {
+            haramPreferencesRepository.setFavoriteSurahsOnly(favoriteOnly)
+        }
+    }
+
+    fun toggleHaramFavoriteSurah(surahNumber: Int) {
+        viewModelScope.launch {
+            haramPreferencesRepository.toggleFavoriteSurah(surahNumber)
+        }
+    }
+
+    fun setHaramDailyLimit(limit: Int) {
+        viewModelScope.launch {
+            haramPreferencesRepository.setDailyLimit(limit)
+        }
+    }
+
+    fun testHaramLiveNotification(
+        source: HaramSource = HaramSource.MAKKAH,
+        surahNumber: Int = 18,
+        surahName: String? = "الكهف",
+        reciterName: String? = "الشيخ عبد الرحمن السديس"
+    ) {
+        HaramLiveNotificationHelper.showHaramNotification(
+            context = app,
+            surahNumber = surahNumber,
+            surahName = surahName,
+            source = source,
+            reciterName = reciterName
+        )
     }
 }

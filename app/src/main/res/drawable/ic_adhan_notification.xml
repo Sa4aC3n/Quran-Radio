@@ -1,0 +1,10 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Mosque dome and minaret silhouette for high-contrast crisp notification icon -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,2A4,4 0 0,0 8,6C8,7.38 8.7,8.6 9.76,9.32C6.93,10.23 4.8,12.75 4.3,16H19.7C19.2,12.75 17.07,10.23 14.24,9.32C15.3,8.6 16,7.38 16,6A4,4 0 0,0 12,2M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4M12,11C14.76,11 17,13.24 17,16H7C7,13.24 9.24,11 12,11M3,18V20H21V18H3Z" />
+</vector>

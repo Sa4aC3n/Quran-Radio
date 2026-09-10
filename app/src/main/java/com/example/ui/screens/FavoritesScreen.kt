@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -27,6 +28,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.localization.StringKey
+import com.example.localization.appString
 import com.example.model.PlaybackStatus
 import com.example.ui.components.StationCard
 import com.example.ui.theme.LiveCoral
@@ -46,7 +49,7 @@ fun FavoritesScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "المحطات المفضلة (${favoriteStations.size})",
+                        text = "${appString(StringKey.FAVORITES_TITLE)} (${favoriteStations.size})",
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -57,13 +60,14 @@ fun FavoritesScreen(
             )
         },
         containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         modifier = modifier
     ) { innerPadding ->
         if (favoriteStations.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding),
+                    .padding(top = innerPadding.calculateTopPadding()),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
@@ -78,7 +82,7 @@ fun FavoritesScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "لا توجد محطات مفضلة حتى الآن",
+                        text = appString(StringKey.FAVORITES_EMPTY_TITLE),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -86,7 +90,7 @@ fun FavoritesScreen(
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "اضغط على أيقونة القلب بجانب أي إذاعة لإضافتها إلى قائمة مفضلتك والوصول إليها بسرعة.",
+                        text = appString(StringKey.FAVORITES_EMPTY_SUBTITLE),
                         style = MaterialTheme.typography.bodyMedium.copy(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         ),
@@ -98,9 +102,9 @@ fun FavoritesScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
+                    .padding(top = innerPadding.calculateTopPadding())
                     .testTag("favorites_list"),
-                contentPadding = PaddingValues(bottom = 90.dp, top = 8.dp)
+                contentPadding = PaddingValues(bottom = 16.dp, top = 8.dp)
             ) {
                 items(favoriteStations, key = { it.id }) { station ->
                     val isCurrentStation = playerState.currentStation?.id == station.id

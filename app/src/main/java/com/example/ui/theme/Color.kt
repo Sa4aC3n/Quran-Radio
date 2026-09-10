@@ -17,9 +17,14 @@ val NavyMuted = Color(0xFF7A8FA0)              // Muted hints, placeholders
 // Secondary Accents & Badges
 val PlayingGreen = Color(0xFFB8E986)           // Fresh active play pulse
 val IslamicGreenPrimary = Color(0xFF059669)     // Secondary Islamic green
+val EmeraldAccent = Color(0xFF10B981)           // Vibrant emerald green
+val DeepEmerald = Color(0xFF064E3B)             // Rich emerald green
+val GoldAccent = Color(0xFFD97706)              // Islamic gold amber accent
 val IslamicMint = Color(0xFF2EBF91)            // Mint accent
 val LiveCoral = Color(0xFFFF6B6B)              // Live pulse badge & favorite heart
+val MangoYellow = Color(0xFFFFA000)            // أصفر منجاوي - Mango Yellow / Amber
 val WatermelonAccent = Color(0xFFFF6B6B)
+val NavyDark = Color(0xFF0F1B2B)
 
 // Surfaces & Borders
 val PureWhite = Color(0xFFFFFFFF)

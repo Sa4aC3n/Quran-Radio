@@ -40,6 +40,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.localization.LocalAppLanguage
+import com.example.localization.StationTranslator
+import com.example.localization.StringKey
+import com.example.localization.appString
+import com.example.localization.localizedName
 import com.example.model.PlaybackStatus
 import com.example.model.RadioStation
 import com.example.ui.theme.PureWhite
@@ -89,12 +94,15 @@ fun StationCard(
                 .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Station Logo / Icon Container
+            // Station Logo / Icon Container with transparent PNG support & app theme background
             Box(
                 modifier = Modifier
-                    .size(54.dp)
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(MaterialTheme.colorScheme.primaryContainer),
+                    .size(50.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(
+                        if (isCurrentStation) SkyBluePrimary.copy(alpha = 0.18f)
+                        else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 if (station.logoUrl.isNotBlank()) {
@@ -102,16 +110,16 @@ fun StationCard(
                         model = station.logoUrl,
                         contentDescription = station.name,
                         modifier = Modifier
-                            .size(54.dp)
-                            .clip(RoundedCornerShape(18.dp)),
-                        contentScale = ContentScale.Crop
+                            .size(32.dp)
+                            .padding(2.dp),
+                        contentScale = ContentScale.Fit
                     )
                 } else {
                     Icon(
                         imageVector = Icons.Default.Radio,
                         contentDescription = null,
                         tint = SkyBluePrimary,
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(24.dp)
                     )
                 }
 
@@ -119,15 +127,16 @@ fun StationCard(
                 if (isPlayingThis) {
                     Box(
                         modifier = Modifier
-                            .size(54.dp)
-                            .clip(RoundedCornerShape(18.dp))
+                            .size(50.dp)
+                            .clip(RoundedCornerShape(16.dp))
                             .background(Color.Black.copy(alpha = 0.55f)),
                         contentAlignment = Alignment.Center
                     ) {
                         WaveformAnimation(
                             isPlaying = true,
                             color = PureWhite,
-                            barCount = 4
+                            barCount = 4,
+                            maxHeight = 16.dp
                         )
                     }
                 }
@@ -136,12 +145,22 @@ fun StationCard(
             Spacer(modifier = Modifier.width(14.dp))
 
             // Station Info
+            val currentLanguage = LocalAppLanguage.current
+            val localizedStationName = station.localizedName(currentLanguage)
+            val localizedSubtitle = if (station.reciter != null) {
+                StationTranslator.getReciterName(station.reciterId, station.reciter, "", currentLanguage)
+            } else {
+                val cName = StationTranslator.getCountryName(station.countryCode ?: "", station.country, "", currentLanguage)
+                val cityName = StationTranslator.getCityName(station.city, currentLanguage)
+                if (cityName.isNotBlank()) "$cName • $cityName" else cName
+            }
+
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = station.name,
+                    text = localizedStationName,
                     style = MaterialTheme.typography.titleSmall.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -154,7 +173,7 @@ fun StationCard(
                 Spacer(modifier = Modifier.height(2.dp))
 
                 Text(
-                    text = if (station.reciter != null) station.reciter else "${station.country} • ${station.city}",
+                    text = localizedSubtitle,
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 11.sp
@@ -194,7 +213,7 @@ fun StationCard(
                 ) {
                     Icon(
                         imageVector = if (station.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                        contentDescription = if (station.isFavorite) "إزالة من المفضلة" else "إضافة للمفضلة",
+                        contentDescription = appString(StringKey.NAV_FAVORITES),
                         tint = if (station.isFavorite) WatermelonAccent else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                         modifier = Modifier.size(20.dp)
                     )
@@ -219,13 +238,13 @@ fun StationCard(
                         if (isPlayingThis) {
                             Icon(
                                 imageVector = Icons.Default.Pause,
-                                contentDescription = "إيقاف مؤقت",
+                                contentDescription = appString(StringKey.MINI_PLAYER_PAUSE),
                                 modifier = Modifier.size(18.dp)
                             )
                         } else {
                             Icon(
                                 imageVector = Icons.Default.PlayArrow,
-                                contentDescription = "تشغيل المحطة",
+                                contentDescription = appString(StringKey.MINI_PLAYER_PLAY),
                                 modifier = Modifier.size(22.dp)
                             )
                         }
@@ -235,3 +254,4 @@ fun StationCard(
         }
     }
 }
+

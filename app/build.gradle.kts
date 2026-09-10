@@ -1,4 +1,5 @@
 import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
+import java.util.Base64
 
 plugins {
   alias(libs.plugins.android.application)
@@ -17,32 +18,50 @@ android {
     applicationId = "com.aistudio.quranradioworld.live"
     minSdk = 24
     targetSdk = 36
-    versionCode = 1
-    versionName = "1.0"
+    versionCode = 14
+    versionName = "13.0.2"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
   signingConfigs {
+    val debugKeystore = file("${rootDir}/debug.keystore")
+    val debugKeystoreBase64 = file("${rootDir}/debug.keystore.base64")
+    if (!debugKeystore.exists() && debugKeystoreBase64.exists()) {
+      try {
+        val decoded = Base64.getDecoder().decode(debugKeystoreBase64.readText().trim())
+        debugKeystore.writeBytes(decoded)
+      } catch (_: Exception) {}
+    }
+
     create("release") {
-      val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
-      storeFile = file(keystorePath)
-      storePassword = System.getenv("STORE_PASSWORD")
-      keyAlias = "upload"
-      keyPassword = System.getenv("KEY_PASSWORD")
+      val customKeystorePath = System.getenv("KEYSTORE_PATH")
+      val customKeystore = customKeystorePath?.let { file(it) } ?: file("${rootDir}/my-upload-key.jks")
+      if (customKeystore.exists()) {
+        storeFile = customKeystore
+        storePassword = System.getenv("STORE_PASSWORD")
+        keyAlias = "upload"
+        keyPassword = System.getenv("KEY_PASSWORD")
+      } else {
+        storeFile = debugKeystore
+        storePassword = "android"
+        keyAlias = "androiddebugkey"
+        keyPassword = "android"
+      }
     }
     create("debugConfig") {
-      storeFile = file("${rootDir}/debug.keystore")
+      storeFile = debugKeystore
       storePassword = "android"
       keyAlias = "androiddebugkey"
       keyPassword = "android"
     }
   }
 
-  buildTypes {
+ buildTypes {
     release {
       isCrunchPngs = false
-      isMinifyEnabled = false
+      isMinifyEnabled = true
+      isShrinkResources = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName("release")
     }
@@ -57,9 +76,36 @@ android {
     buildConfig = true
   }
   testOptions { unitTests { isIncludeAndroidResources = true } }
+  lint {
+    abortOnError = false
+    checkReleaseBuilds = false
+    disable.addAll(listOf("InvalidFragmentVersionForActivityResult"))
+  }
   dependenciesInfo {
     includeInApk = false
     includeInBundle = true
+  }
+  bundle {
+    language {
+      enableSplit = false
+    }
+    density {
+      enableSplit = true
+    }
+    abi {
+      enableSplit = true
+    }
+  }
+  packaging {
+    resources {
+      excludes += listOf(
+        "/META-INF/{AL2.0,LGPL2.1}",
+        "/META-INF/*.version",
+        "/META-INF/INDEX.LIST",
+        "/META-INF/DEPENDENCIES",
+        "DebugProbesKt.bin"
+      )
+    }
   }
 }
 
@@ -96,6 +142,7 @@ dependencies {
   implementation(libs.androidx.lifecycle.runtime.ktx)
   implementation(libs.androidx.lifecycle.viewmodel.compose)
   implementation(libs.androidx.navigation.compose)
+  implementation(libs.androidx.work.runtime.ktx)
   // implementation(libs.androidx.room.ktx)
   // implementation(libs.androidx.room.runtime)
   implementation(libs.coil.compose)
@@ -104,7 +151,7 @@ dependencies {
   implementation(libs.androidx.media3.session)
   implementation(libs.androidx.media3.ui)
   implementation(libs.androidx.media3.common)
-  implementation(libs.converter.moshi)
+  // implementation(libs.converter.moshi)
   implementation(libs.firebase.ai)
   // Uncomment to use Firestore:
   // implementation(libs.firebase.firestore)
@@ -116,13 +163,15 @@ dependencies {
   // implementation(libs.androidx.credentials.play.services)
   // implementation(libs.googleid)
   implementation(libs.firebase.appcheck.recaptcha)
+  implementation(libs.play.app.update)
+  implementation(libs.play.app.update.ktx)
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.core)
-  implementation(libs.logging.interceptor)
-  implementation(libs.moshi.kotlin)
+  // implementation(libs.logging.interceptor)
+  // implementation(libs.moshi.kotlin)
   implementation(libs.okhttp)
-  // implementation(libs.play.services.location)
-  implementation(libs.retrofit)
+  implementation(libs.play.services.location)
+  // implementation(libs.retrofit)
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)
   testImplementation(libs.androidx.junit)

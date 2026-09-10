@@ -78,15 +78,15 @@ class AtheerRadioImporter(
                 .header("User-Agent", "QuranRadioWorld/1.0")
                 .build()
 
-            val catsResp = client.newCall(catsReq).execute()
-            if (!catsResp.isSuccessful) {
-                Log.w(TAG, "[ATHEER_IMPORT] Failed to fetch categories: ${catsResp.code}")
-                return@withContext loadFromSeed()
+            val reads = client.newCall(catsReq).execute().use { catsResp ->
+                if (!catsResp.isSuccessful) {
+                    Log.w(TAG, "[ATHEER_IMPORT] Failed to fetch categories: ${catsResp.code}")
+                    return@withContext loadFromSeed()
+                }
+                val catsBody = catsResp.body?.string() ?: ""
+                val catsJson = JSONObject(catsBody)
+                catsJson.optJSONArray("reads") ?: JSONArray()
             }
-
-            val catsBody = catsResp.body?.string() ?: ""
-            val catsJson = JSONObject(catsBody)
-            val reads = catsJson.optJSONArray("reads") ?: JSONArray()
 
             for (i in 0 until reads.length()) {
                 val catObj = reads.getJSONObject(i)
@@ -98,84 +98,85 @@ class AtheerRadioImporter(
                     .header("User-Agent", "QuranRadioWorld/1.0")
                     .build()
 
-                val radiosResp = client.newCall(radiosReq).execute()
-                if (radiosResp.isSuccessful) {
-                    val radiosBody = radiosResp.body?.string() ?: ""
-                    val rJson = JSONObject(radiosBody)
-                    val rArray = rJson.optJSONArray("radios") ?: rJson.optJSONArray("reads") ?: JSONArray()
+                client.newCall(radiosReq).execute().use { radiosResp ->
+                    if (radiosResp.isSuccessful) {
+                        val radiosBody = radiosResp.body?.string() ?: ""
+                        val rJson = JSONObject(radiosBody)
+                        val rArray = rJson.optJSONArray("radios") ?: rJson.optJSONArray("reads") ?: JSONArray()
 
-                    for (j in 0 until rArray.length()) {
-                        val rObj = rArray.getJSONObject(j)
-                        val id = rObj.optInt("id")
-                        val name = rObj.optString("name")
-                        val rawUrl = rObj.optString("URL")
+                        for (j in 0 until rArray.length()) {
+                            val rObj = rArray.getJSONObject(j)
+                            val id = rObj.optInt("id")
+                            val name = rObj.optString("name")
+                            val rawUrl = rObj.optString("URL")
 
-                        if (rawUrl.isNotBlank() && rawUrl.startsWith("http")) {
-                            val primaryUrl = if (rawUrl.contains("backup.qurango.net")) {
-                                rawUrl.replace("backup.qurango.net", "qurango.net")
-                            } else {
-                                rawUrl
-                            }
-                            val backupUrl = if (rawUrl.contains("backup.qurango.net")) {
-                                rawUrl
-                            } else if (rawUrl.contains("qurango.net")) {
-                                rawUrl.replace("qurango.net", "backup.qurango.net")
-                            } else null
+                            if (rawUrl.isNotBlank() && rawUrl.startsWith("http")) {
+                                val primaryUrl = if (rawUrl.contains("backup.qurango.net")) {
+                                    rawUrl.replace("backup.qurango.net", "qurango.net")
+                                } else {
+                                    rawUrl
+                                }
+                                val backupUrl = if (rawUrl.contains("backup.qurango.net")) {
+                                    rawUrl
+                                } else if (rawUrl.contains("qurango.net")) {
+                                    rawUrl.replace("qurango.net", "backup.qurango.net")
+                                } else null
 
-                            val catEnum = mapCategory(catId, catName)
-                            val reciterName = if (catEnum == StationCategory.RECITER) name else null
+                                val catEnum = mapCategory(catId, catName)
+                                val reciterName = if (catEnum == StationCategory.RECITER) name else null
 
-                            val streamList = mutableListOf<StationStream>()
-                            streamList.add(
-                                StationStream(
-                                    id = "atheer_${id}_primary",
-                                    stationId = "atheer_$id",
-                                    url = primaryUrl,
-                                    priority = 1,
-                                    isPrimary = true,
-                                    isBackup = false,
-                                    status = "ONLINE",
-                                    healthScore = 100
-                                )
-                            )
-                            if (backupUrl != null) {
+                                val streamList = mutableListOf<StationStream>()
                                 streamList.add(
                                     StationStream(
-                                        id = "atheer_${id}_backup",
+                                        id = "atheer_${id}_primary",
                                         stationId = "atheer_$id",
-                                        url = backupUrl,
-                                        priority = 2,
-                                        isPrimary = false,
-                                        isBackup = true,
+                                        url = primaryUrl,
+                                        priority = 1,
+                                        isPrimary = true,
+                                        isBackup = false,
                                         status = "ONLINE",
-                                        healthScore = 95
+                                        healthScore = 100
+                                    )
+                                )
+                                if (backupUrl != null) {
+                                    streamList.add(
+                                        StationStream(
+                                            id = "atheer_${id}_backup",
+                                            stationId = "atheer_$id",
+                                            url = backupUrl,
+                                            priority = 2,
+                                            isPrimary = false,
+                                            isBackup = true,
+                                            status = "ONLINE",
+                                            healthScore = 95
+                                        )
+                                    )
+                                }
+
+                                stations.add(
+                                    RadioStation(
+                                        id = "atheer_$id",
+                                        name = name,
+                                        nameAr = name,
+                                        country = if (name.contains("السعودية") || catId == 13) "المملكة العربية السعودية" else "العالم الإسلامي",
+                                        countryCode = if (name.contains("السعودية") || catId == 13) "SA" else "GLOBAL",
+                                        category = catEnum,
+                                        reciter = reciterName,
+                                        reciterId = if (reciterName != null) "reciter_$id" else null,
+                                        streamUrl = primaryUrl,
+                                        fallbackStreamUrl = backupUrl,
+                                        streams = streamList,
+                                        sourceName = "Atheer Radio",
+                                        sourceWebsite = "https://www.atheer-radio.com/library",
+                                        sourceUrl = "https://www.atheer-radio.com/library/$catId",
+                                        logoUrl = "https://www.atheer-radio.com/assets/imgs/cat$catId.png",
+                                        description = "بث مباشر لـ $name عبر شبكة إذاعات أثير راديو.",
+                                        isVerified = true,
+                                        streamStatus = "ONLINE",
+                                        priority = 50
                                     )
                                 )
                             }
-
-                            stations.add(
-                                RadioStation(
-                                    id = "atheer_$id",
-                                    name = name,
-                                    nameAr = name,
-                                    country = if (name.contains("السعودية") || catId == 13) "المملكة العربية السعودية" else "العالم الإسلامي",
-                                    countryCode = if (name.contains("السعودية") || catId == 13) "SA" else "GLOBAL",
-                                    category = catEnum,
-                                    reciter = reciterName,
-                                    reciterId = if (reciterName != null) "reciter_$id" else null,
-                                    streamUrl = primaryUrl,
-                                    fallbackStreamUrl = backupUrl,
-                                    streams = streamList,
-                                    sourceName = "Atheer Radio",
-                                    sourceWebsite = "https://www.atheer-radio.com/library",
-                                    sourceUrl = "https://www.atheer-radio.com/library/$catId",
-                                    logoUrl = "https://www.atheer-radio.com/assets/imgs/cat$catId.png",
-                                    description = "بث مباشر لـ $name عبر شبكة إذاعات أثير راديو.",
-                                    isVerified = true,
-                                    streamStatus = "ONLINE",
-                                    priority = 50
-                                )
-                            )
                         }
                     }
                 }

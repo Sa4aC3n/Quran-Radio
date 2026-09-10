@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -76,9 +77,12 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.BuildConfig
+import com.example.localization.StringKey
+import com.example.localization.appString
 import com.example.ui.theme.NavyMuted
 import com.example.ui.theme.NavyPrimary
 import com.example.ui.theme.PureWhite
+import com.example.ui.theme.SkyBlueDark
 import com.example.ui.theme.SkyBluePrimary
 import kotlinx.coroutines.launch
 
@@ -100,43 +104,42 @@ fun AboutScreen(
         isVisible = true
     }
 
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = "حول التطبيق",
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(
-                            onClick = onBackClick,
-                            modifier = Modifier.testTag("about_back_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "رجوع",
-                                tint = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = appString(StringKey.ABOUT_TITLE),
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
+                },
+                navigationIcon = {
+                    IconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.testTag("about_back_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = appString(StringKey.NAV_BACK),
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
-            },
-            snackbarHost = {
-                SnackbarHost(
-                    hostState = snackbarHostState,
-                    modifier = Modifier.testTag("about_snackbar_host")
-                )
-            },
-            containerColor = MaterialTheme.colorScheme.background,
-            modifier = modifier
-        ) { innerPadding ->
+            )
+        },
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.testTag("about_snackbar_host")
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.background,
+        modifier = modifier
+    ) { innerPadding ->
             AnimatedVisibility(
                 visible = isVisible,
                 enter = fadeIn(animationSpec = tween(400)) + slideInVertically(
@@ -207,7 +210,7 @@ fun AboutScreen(
                             Spacer(modifier = Modifier.height(4.dp))
 
                             Text(
-                                text = "إذاعات القرآن الكريم",
+                                text = appString(StringKey.APP_TITLE),
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = SkyBluePrimary,
@@ -218,7 +221,7 @@ fun AboutScreen(
                             Spacer(modifier = Modifier.height(6.dp))
 
                             Text(
-                                text = "استمع إلى القرآن الكريم من إذاعات العالم",
+                                text = appString(StringKey.APP_SUBTITLE),
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 13.sp
@@ -235,7 +238,7 @@ fun AboutScreen(
                                 border = BorderStroke(1.dp, SkyBluePrimary.copy(alpha = 0.3f))
                             ) {
                                 Text(
-                                    text = "الإصدار ${BuildConfig.VERSION_NAME}",
+                                    text = "${appString(StringKey.ABOUT_VERSION)} ${BuildConfig.VERSION_NAME}",
                                     style = MaterialTheme.typography.labelMedium.copy(
                                         color = SkyBluePrimary,
                                         fontWeight = FontWeight.Bold,
@@ -251,7 +254,7 @@ fun AboutScreen(
 
                     // Section: About App (نبذة عن التطبيق)
                     Text(
-                        text = "عن التطبيق",
+                        text = appString(StringKey.ABOUT_MISSION_TITLE),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = SkyBluePrimary
@@ -288,7 +291,7 @@ fun AboutScreen(
                                 }
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Text(
-                                    text = "رسالة إذاعات القرآن الكريم",
+                                    text = appString(StringKey.ABOUT_MISSION_TITLE),
                                     style = MaterialTheme.typography.titleSmall.copy(
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurface
@@ -299,7 +302,7 @@ fun AboutScreen(
                             Spacer(modifier = Modifier.height(12.dp))
 
                             Text(
-                                text = "إذاعات القرآن الكريم هو تطبيق يهدف إلى جمع محطات القرآن الكريم والبث القرآني من مختلف الدول في مكان واحد، ليمنحك تجربة استماع سهلة وهادئة أينما كنت.",
+                                text = appString(StringKey.ABOUT_MISSION_P1),
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     color = MaterialTheme.colorScheme.onSurface,
                                     lineHeight = 24.sp,
@@ -310,7 +313,7 @@ fun AboutScreen(
                             Spacer(modifier = Modifier.height(12.dp))
 
                             Text(
-                                text = "نسعى إلى تقديم تجربة بسيطة وموثوقة لمحبي القرآن الكريم، مع إمكانية الوصول إلى الإذاعات والمحطات القرآنية والاستماع إليها مباشرة عبر الإنترنت.",
+                                text = appString(StringKey.ABOUT_MISSION_P2),
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     lineHeight = 24.sp,
@@ -320,83 +323,145 @@ fun AboutScreen(
                         }
                     }
 
-
-
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Section: Interaction & Developer Contact
-                    Text(
-                        text = "التواصل والمشاركة",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = SkyBluePrimary
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 4.dp, vertical = 6.dp)
-                    )
-
+                    // Section: Share & Rate App Card (انشر تؤجر • شارك تطبيق القرآن الكريم)
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("about_contact_share_card"),
                         shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.35f)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
-                            // 1. Contact Us (Email)
-                            ActionRowItem(
-                                icon = Icons.Default.Email,
-                                title = "تواصل معنا",
-                                subtitle = "m.k3shka@gmail.com",
-                                isSubtitleLtr = true,
-                                testTag = "btn_contact_email",
-                                onClick = {
-                                    sendEmail(
-                                        context = context,
-                                        email = "m.k3shka@gmail.com",
-                                        subject = "Quran Radio World - تواصل معنا",
-                                        onError = {
-                                            scope.launch {
-                                                snackbarHostState.showSnackbar("لا يوجد تطبيق بريد إلكتروني مثبت على الجهاز.")
-                                            }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    brush = Brush.linearGradient(
+                                        colors = listOf(
+                                            SkyBlueDark,
+                                            SkyBluePrimary,
+                                            Color(0xFF004D40)
+                                        )
+                                    )
+                                )
+                                .padding(horizontal = 16.dp, vertical = 20.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                // 1. Title: انشر تؤجر • شارك تطبيق القرآن الكريم
+                                Text(
+                                    text = "انشر تؤجر • شارك تطبيق القرآن الكريم",
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                        fontSize = 16.sp
+                                    ),
+                                    textAlign = TextAlign.Center
+                                )
+
+                                Spacer(modifier = Modifier.height(6.dp))
+
+                                // 2. Hadith: قال ﷺ: «مَن دلَّ على خيرٍ فله مثلُ أجرِ فاعله»
+                                Text(
+                                    text = "قال ﷺ: «مَن دلَّ على خيرٍ فله مثلُ أجرِ فاعله»",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color.White.copy(alpha = 0.95f),
+                                        fontSize = 13.sp
+                                    ),
+                                    textAlign = TextAlign.Center
+                                )
+
+                                Spacer(modifier = Modifier.height(18.dp))
+
+                                // 3. Two Buttons side by side
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    // 1. Share App (مشاركة التطبيق)
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(50.dp)
+                                            .clip(RoundedCornerShape(16.dp))
+                                            .background(Color.Black.copy(alpha = 0.22f))
+                                            .border(
+                                                border = BorderStroke(1.2.dp, Color.White.copy(alpha = 0.65f)),
+                                                shape = RoundedCornerShape(16.dp)
+                                            )
+                                            .clickable { shareApp(context = context) }
+                                            .testTag("btn_share_app"),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 8.dp),
+                                            horizontalArrangement = Arrangement.Center,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Share,
+                                                contentDescription = null,
+                                                tint = Color(0xFFFFD54F), // لمسة ذهبية مشرقة
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = appString(StringKey.ABOUT_SHARE_APP),
+                                                style = MaterialTheme.typography.labelLarge.copy(
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = Color.White,
+                                                    fontSize = 14.sp
+                                                )
+                                            )
                                         }
-                                    )
-                                }
-                            )
+                                    }
 
-                            Spacer(modifier = Modifier.height(10.dp))
-
-                            // 2. Share App
-                            ActionRowItem(
-                                icon = Icons.Default.Share,
-                                title = "شارك التطبيق",
-                                subtitle = "شارك الأجر ومرر التطبيق إلى أصدقائك وعائلتك",
-                                testTag = "btn_share_app",
-                                onClick = {
-                                    shareApp(
-                                        context = context,
-                                        text = "استمع إلى القرآن الكريم من إذاعات العالم عبر تطبيق Quran Radio World ❤️"
-                                    )
-                                }
-                            )
-
-                            Spacer(modifier = Modifier.height(10.dp))
-
-                            // 3. Rate App
-                            ActionRowItem(
-                                icon = Icons.Default.Star,
-                                title = "قيّم التطبيق",
-                                subtitle = "دعمك لنا يساعد في نشر تطبيق القرآن الكريم",
-                                testTag = "btn_rate_app",
-                                onClick = {
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar("شكرًا لاهتمامك ودعمك لتطبيق إذاعات القرآن الكريم ❤️")
+                                    // 2. Rate App (تقييم التطبيق)
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(50.dp)
+                                            .clip(RoundedCornerShape(16.dp))
+                                            .background(Color.Black.copy(alpha = 0.22f))
+                                            .border(
+                                                border = BorderStroke(1.2.dp, Color.White.copy(alpha = 0.65f)),
+                                                shape = RoundedCornerShape(16.dp)
+                                            )
+                                            .clickable { openPlayStore(context = context) }
+                                            .testTag("btn_rate_app"),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 8.dp),
+                                            horizontalArrangement = Arrangement.Center,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Star,
+                                                contentDescription = null,
+                                                tint = Color(0xFFFFD54F), // نجمة ذهبية مشرقة
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = appString(StringKey.ABOUT_RATE_APP),
+                                                style = MaterialTheme.typography.labelLarge.copy(
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = Color.White,
+                                                    fontSize = 14.sp
+                                                )
+                                            )
+                                        }
                                     }
                                 }
-                            )
+                            }
                         }
                     }
 
@@ -404,7 +469,7 @@ fun AboutScreen(
 
                     // Section: Legal Information
                     Text(
-                        text = "المعلومات القانونية",
+                        text = appString(StringKey.ABOUT_LEGAL_SECTION),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = SkyBluePrimary
@@ -426,12 +491,12 @@ fun AboutScreen(
                         Column(modifier = Modifier.padding(14.dp)) {
                             ActionRowItem(
                                 icon = Icons.Default.PrivacyTip,
-                                title = "سياسة الخصوصية",
-                                subtitle = "التطبيق يحترم خصوصيتك بالكامل ولا يجمع أي بيانات شخصية",
+                                title = appString(StringKey.ABOUT_PRIVACY_POLICY),
+                                subtitle = appString(StringKey.ABOUT_PRIVACY_POLICY_SUBTITLE),
                                 testTag = "btn_privacy_policy",
                                 onClick = {
-                                    activeDialogTitle = "سياسة الخصوصية"
-                                    activeDialogContent = "تطبيق Quran Radio World (إذاعات القرآن الكريم) يحترم خصوصية المستخدمين بشكل كامل.\n\n• لا يتم جمع أو تتبع أي بيانات شخصية أو موقع جغرافي.\n• جميع التفضيلات كالمحطات المفضلة ومؤقت النوم يتم تخزينها محليًا فقط على جهازك.\n• التطبيق يستخدم الاتصال بالإنترنت حصريًا لتشغيل روابط البث الإذاعي المباشر."
+                                    activeDialogTitle = "Privacy Policy"
+                                    activeDialogContent = "Quran Radio World respects your privacy.\n\n• No personal data or location is tracked or stored.\n• All preferences (favorites, timer, language) are stored locally on your device.\n• Internet connection is used exclusively to stream live broadcast feeds."
                                 }
                             )
 
@@ -439,12 +504,12 @@ fun AboutScreen(
 
                             ActionRowItem(
                                 icon = Icons.Default.Gavel,
-                                title = "شروط الاستخدام",
-                                subtitle = "تطبيق مجاني غير ربحي مخصص للاستماع لتلاوات القرآن الكريم",
+                                title = appString(StringKey.ABOUT_TERMS_OF_SERVICE),
+                                subtitle = appString(StringKey.ABOUT_TERMS_OF_SERVICE_SUBTITLE),
                                 testTag = "btn_terms_of_service",
                                 onClick = {
-                                    activeDialogTitle = "شروط الاستخدام"
-                                    activeDialogContent = "تطبيق Quran Radio World مخصص لتمكين المسلمين ومحبي القرآن الكريم حول العالم من الاستماع إلى البث المباشر لإذاعات القرآن الرسمية.\n\n• جميع حقوق التلاوات والمحتوى الإذاعي محفوظة للإذاعات والهيئات الرسمية المصدرة لها.\n• استخدام التطبيق مجاني بالكامل."
+                                    activeDialogTitle = "Terms of Service"
+                                    activeDialogContent = "Quran Radio World is provided free of charge for listening to live Holy Quran radio stations worldwide.\n\n• All recitation copyrights belong to their respective broadcasting entities.\n• The application is completely free to use."
                                 }
                             )
                         }
@@ -472,7 +537,7 @@ fun AboutScreen(
                         Spacer(modifier = Modifier.height(2.dp))
 
                         Text(
-                            text = "إذاعات القرآن الكريم",
+                            text = appString(StringKey.APP_TITLE),
                             style = MaterialTheme.typography.bodySmall.copy(
                                 color = SkyBluePrimary,
                                 fontWeight = FontWeight.Medium,
@@ -490,34 +555,7 @@ fun AboutScreen(
                             )
                         )
 
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                            Text(
-                                text = "m.k3shka@gmail.com",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = SkyBluePrimary,
-                                    fontSize = 11.5.sp
-                                ),
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .clickable {
-                                        sendEmail(
-                                            context = context,
-                                            email = "m.k3shka@gmail.com",
-                                            subject = "Quran Radio World - تواصل معنا",
-                                            onError = {
-                                                scope.launch {
-                                                    snackbarHostState.showSnackbar("لا يوجد تطبيق بريد إلكتروني مثبت على الجهاز.")
-                                                }
-                                            }
-                                        )
-                                    }
-                                    .padding(horizontal = 8.dp, vertical = 2.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
 
                         Text(
                             text = "© 2026 Quran Radio World",
@@ -530,7 +568,7 @@ fun AboutScreen(
                         Spacer(modifier = Modifier.height(2.dp))
 
                         Text(
-                            text = "جميع الحقوق محفوظة",
+                            text = appString(StringKey.ABOUT_ALL_RIGHTS_RESERVED),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                                 fontSize = 11.sp
@@ -574,7 +612,7 @@ fun AboutScreen(
                         }
                     ) {
                         Text(
-                            text = "حسناً",
+                            text = appString(StringKey.DIALOG_OK),
                             fontWeight = FontWeight.Bold,
                             color = SkyBluePrimary
                         )
@@ -585,7 +623,6 @@ fun AboutScreen(
             )
         }
     }
-}
 
 @Composable
 private fun ActionRowItem(
@@ -660,28 +697,9 @@ private fun ActionRowItem(
     }
 }
 
-private fun sendEmail(
-    context: Context,
-    email: String,
-    subject: String,
-    onError: () -> Unit
-) {
-    try {
-        val intent = Intent(Intent.ACTION_SENDTO).apply {
-            data = Uri.parse("mailto:$email")
-            putExtra(Intent.EXTRA_SUBJECT, subject)
-        }
-        context.startActivity(intent)
-    } catch (e: ActivityNotFoundException) {
-        onError()
-    } catch (e: Exception) {
-        onError()
-    }
-}
-
 private fun shareApp(
     context: Context,
-    text: String
+    text: String = "استمع إلى القرآن الكريم من إذاعات العالم عبر تطبيق Quran Radio World ❤️\nhttps://play.google.com/store/apps/details?id=com.aistudio.quranradioworld.live"
 ) {
     try {
         val sendIntent = Intent().apply {
@@ -692,4 +710,21 @@ private fun shareApp(
         val shareIntent = Intent.createChooser(sendIntent, "مشاركة التطبيق")
         context.startActivity(shareIntent)
     } catch (_: Exception) {}
+}
+
+private fun openPlayStore(context: Context) {
+    val packageName = "com.aistudio.quranradioworld.live"
+    try {
+        val marketIntent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        context.startActivity(marketIntent)
+    } catch (e: Exception) {
+        try {
+            val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName")).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            context.startActivity(webIntent)
+        } catch (_: Exception) {}
+    }
 }

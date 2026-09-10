@@ -74,6 +74,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.localization.LocalAppLanguage
+import com.example.localization.StationTranslator
+import com.example.localization.StringKey
+import com.example.localization.appString
+import com.example.localization.localizedName
 import com.example.model.PlaybackStatus
 import com.example.ui.components.LiveStatusBadge
 import com.example.ui.components.SleepTimerDialog
@@ -116,7 +121,7 @@ fun FullPlayerScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "مشغل البث المباشر",
+                        text = appString(StringKey.PLAYER_NOW_PLAYING),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -129,7 +134,7 @@ fun FullPlayerScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowDown,
-                            contentDescription = "تصغير المشغل",
+                            contentDescription = "Collapse Player",
                             tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(32.dp)
                         )
@@ -144,18 +149,18 @@ fun FullPlayerScreen(
                                     action = Intent.ACTION_SEND
                                     putExtra(
                                         Intent.EXTRA_TEXT,
-                                        "استمع الآن إلى ${station.name} عبر تطبيق إذاعات القرآن الكريم:\n${station.streamUrl}"
+                                        "${station.name}\n${station.streamUrl}"
                                     )
                                     type = "text/plain"
                                 }
-                                val shareIntent = Intent.createChooser(sendIntent, "مشاركة الإذاعة")
+                                val shareIntent = Intent.createChooser(sendIntent, "Share Station")
                                 context.startActivity(shareIntent)
                             }
                         }
                     ) {
                         Icon(
                             imageVector = Icons.Default.Share,
-                            contentDescription = "مشاركة المحطة",
+                            contentDescription = appString(StringKey.PLAYER_SHARE_STATION),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -179,20 +184,24 @@ fun FullPlayerScreen(
         ) {
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Large Artwork / Station Icon in SkyBlue Container
+            // Large Artwork / Station Icon in App Themed Container with transparent PNG support
             Box(
                 modifier = Modifier
-                    .size(220.dp)
+                    .size(200.dp)
                     .scale(pulseScale)
-                    .shadow(16.dp, RoundedCornerShape(36.dp), ambientColor = SkyBluePrimary.copy(alpha = 0.3f), spotColor = Color.Black.copy(alpha = 0.2f))
-                    .clip(RoundedCornerShape(36.dp))
+                    .shadow(16.dp, RoundedCornerShape(32.dp), ambientColor = SkyBluePrimary.copy(alpha = 0.25f), spotColor = Color.Black.copy(alpha = 0.15f))
+                    .clip(RoundedCornerShape(32.dp))
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                SkyBluePrimary.copy(alpha = 0.85f),
-                                MaterialTheme.colorScheme.primaryContainer
+                                SkyBluePrimary.copy(alpha = 0.2f),
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
                             )
                         )
+                    )
+                    .border(
+                        BorderStroke(1.5.dp, SkyBluePrimary.copy(alpha = 0.4f)),
+                        RoundedCornerShape(32.dp)
                     )
                     .testTag("full_player_artwork"),
                 contentAlignment = Alignment.Center
@@ -202,16 +211,16 @@ fun FullPlayerScreen(
                         model = station.logoUrl,
                         contentDescription = station.name,
                         modifier = Modifier
-                            .fillMaxSize()
-                            .clip(RoundedCornerShape(36.dp)),
-                        contentScale = ContentScale.Crop
+                            .size(110.dp)
+                            .padding(8.dp),
+                        contentScale = ContentScale.Fit
                     )
                 } else {
                     Icon(
                         imageVector = Icons.Default.Radio,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(90.dp)
+                        tint = SkyBluePrimary,
+                        modifier = Modifier.size(72.dp)
                     )
                 }
             }
@@ -223,7 +232,10 @@ fun FullPlayerScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                LiveStatusBadge(status = playerState.status)
+                LiveStatusBadge(
+                    status = playerState.status,
+                    isAutoRetrying = playerState.isAutoRetrying
+                )
                 if (isPlaying) {
                     WaveformAnimation(
                         isPlaying = true,
@@ -237,8 +249,20 @@ fun FullPlayerScreen(
             Spacer(modifier = Modifier.height(14.dp))
 
             // Station Title & Details
+            val currentLang = LocalAppLanguage.current
+            val localizedStationName = station?.localizedName(currentLang) ?: appString(StringKey.APP_NAME)
+            val localizedSubtitle = if (station?.reciter != null) {
+                StationTranslator.getReciterName(station.reciterId, station.reciter, "", currentLang)
+            } else if (station != null) {
+                val cName = StationTranslator.getCountryName(station.countryCode ?: "", station.country, "", currentLang)
+                val cityName = StationTranslator.getCityName(station.city, currentLang)
+                if (cityName.isNotBlank()) "$cName • $cityName" else cName
+            } else {
+                ""
+            }
+
             Text(
-                text = station?.name ?: "اختر محطة للاستماع",
+                text = localizedStationName,
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -249,16 +273,18 @@ fun FullPlayerScreen(
                 overflow = TextOverflow.Ellipsis
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            if (localizedSubtitle.isNotBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
 
-            Text(
-                text = station?.reciter ?: "${station?.country ?: ""} • ${station?.city ?: ""}",
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    color = SkyBluePrimary,
-                    fontWeight = FontWeight.Bold
-                ),
-                textAlign = TextAlign.Center
-            )
+                Text(
+                    text = localizedSubtitle,
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        color = SkyBluePrimary,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    textAlign = TextAlign.Center
+                )
+            }
 
             if (station?.description?.isNotBlank() == true) {
                 Spacer(modifier = Modifier.height(4.dp))
@@ -320,7 +346,7 @@ fun FullPlayerScreen(
                                 shape = RoundedCornerShape(10.dp),
                                 modifier = Modifier.height(34.dp)
                             ) {
-                                Text("إعادة", fontSize = 12.sp)
+                                Text(appString(StringKey.RETRY), fontSize = 12.sp)
                             }
                         }
                     }
@@ -350,7 +376,7 @@ fun FullPlayerScreen(
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.SkipPrevious,
-                            contentDescription = "المحطة السابقة",
+                            contentDescription = "Previous Station",
                             modifier = Modifier.size(28.dp),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
@@ -382,13 +408,13 @@ fun FullPlayerScreen(
                         } else if (isPlaying) {
                             Icon(
                                 imageVector = Icons.Default.Pause,
-                                contentDescription = "إيقاف مؤقت",
+                                contentDescription = appString(StringKey.MINI_PLAYER_PAUSE),
                                 modifier = Modifier.size(38.dp)
                             )
                         } else {
                             Icon(
                                 imageVector = Icons.Default.PlayArrow,
-                                contentDescription = "تشغيل البث",
+                                contentDescription = appString(StringKey.MINI_PLAYER_PLAY),
                                 modifier = Modifier.size(42.dp)
                             )
                         }
@@ -410,7 +436,7 @@ fun FullPlayerScreen(
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.SkipNext,
-                            contentDescription = "المحطة التالية",
+                            contentDescription = "Next Station",
                             modifier = Modifier.size(28.dp),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
@@ -442,14 +468,14 @@ fun FullPlayerScreen(
                         val isFav = station?.isFavorite == true
                         Icon(
                             imageVector = if (isFav) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                            contentDescription = "المفضلة",
+                            contentDescription = appString(StringKey.NAV_FAVORITES),
                             tint = if (isFav) LiveCoral else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(24.dp)
                         )
                     }
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = if (station?.isFavorite == true) "في المفضلة" else "المفضلة",
+                        text = appString(StringKey.NAV_FAVORITES),
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Medium
@@ -472,7 +498,7 @@ fun FullPlayerScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.AvTimer,
-                            contentDescription = "مؤقت النوم",
+                            contentDescription = appString(StringKey.PLAYER_SLEEP_TIMER),
                             tint = if (playerState.isSleepTimerActive) SkyBluePrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(24.dp)
                         )
@@ -484,7 +510,7 @@ fun FullPlayerScreen(
                             val secs = playerState.sleepTimerRemainingSeconds % 60
                             "%02d:%02d".format(mins, secs)
                         } else {
-                            "مؤقت النوم"
+                            appString(StringKey.PLAYER_SLEEP_TIMER)
                         },
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = if (playerState.isSleepTimerActive) SkyBluePrimary else MaterialTheme.colorScheme.onSurface,
@@ -508,3 +534,4 @@ fun FullPlayerScreen(
         onDismiss = { isSleepTimerOpen = false }
     )
 }
+

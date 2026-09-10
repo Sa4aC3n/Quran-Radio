@@ -46,6 +46,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.localization.LocalAppLanguage
+import com.example.localization.StationTranslator
+import com.example.localization.StringKey
+import com.example.localization.appString
+import com.example.localization.localizedName
 import com.example.model.PlaybackStatus
 import com.example.model.PlayerState
 import com.example.ui.theme.BorderSubtle
@@ -108,7 +113,7 @@ fun MiniPlayer(
                             .padding(horizontal = 12.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Station Thumbnail in SkyBlue box matching theme
+                        // Station Thumbnail in SkyBlue box matching theme with transparent PNG support
                         Box(
                             modifier = Modifier
                                 .size(44.dp)
@@ -121,16 +126,16 @@ fun MiniPlayer(
                                     model = station.logoUrl,
                                     contentDescription = station.name,
                                     modifier = Modifier
-                                        .size(44.dp)
-                                        .clip(RoundedCornerShape(14.dp)),
-                                    contentScale = ContentScale.Crop
+                                        .size(28.dp)
+                                        .padding(1.dp),
+                                    contentScale = ContentScale.Fit
                                 )
                             } else {
                                 Icon(
                                     imageVector = Icons.Default.Radio,
                                     contentDescription = null,
                                     tint = PureWhite,
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(22.dp)
                                 )
                             }
 
@@ -155,12 +160,26 @@ fun MiniPlayer(
                         Spacer(modifier = Modifier.width(12.dp))
 
                         // Station Title & Status Subtitle
+                        val currentLang = LocalAppLanguage.current
+                        val localizedStationName = station.localizedName(currentLang)
+                        val localizedSubtitle = if (playerState.isAutoRetrying) {
+                            appString(StringKey.PLAYER_STATUS_RECONNECTING)
+                        } else if (isConnecting) {
+                            appString(StringKey.PLAYER_STATUS_BUFFERING)
+                        } else if (isPlaying) {
+                            appString(StringKey.HOME_LIVE_NOW)
+                        } else if (station.reciter != null) {
+                            StationTranslator.getReciterName(station.reciterId, station.reciter, "", currentLang)
+                        } else {
+                            StationTranslator.getCountryName(station.countryCode ?: "", station.country, "", currentLang)
+                        }
+
                         Column(
                             modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.Center
                         ) {
                             Text(
-                                text = station.name,
+                                text = localizedStationName,
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface,
@@ -173,7 +192,7 @@ fun MiniPlayer(
                             Spacer(modifier = Modifier.height(2.dp))
 
                             Text(
-                                text = if (isConnecting) "جارٍ الاتصال بالبث..." else if (isPlaying) "مباشر الآن..." else (station.reciter ?: station.country),
+                                text = localizedSubtitle,
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = if (isPlaying || isConnecting) SkyBluePrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontWeight = if (isPlaying) FontWeight.Bold else FontWeight.Normal,
@@ -211,13 +230,13 @@ fun MiniPlayer(
                                 } else if (isPlaying) {
                                     Icon(
                                         imageVector = Icons.Default.Pause,
-                                        contentDescription = "إيقاف مؤقت",
+                                        contentDescription = appString(StringKey.MINI_PLAYER_PAUSE),
                                         modifier = Modifier.size(20.dp)
                                     )
                                 } else {
                                     Icon(
                                         imageVector = Icons.Default.PlayArrow,
-                                        contentDescription = "استئناف التشغيل",
+                                        contentDescription = appString(StringKey.MINI_PLAYER_PLAY),
                                         modifier = Modifier.size(22.dp)
                                     )
                                 }
@@ -233,7 +252,7 @@ fun MiniPlayer(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = "إغلاق المشغل",
+                                contentDescription = appString(StringKey.MINI_PLAYER_CLOSE),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -244,3 +263,4 @@ fun MiniPlayer(
         }
     }
 }
+

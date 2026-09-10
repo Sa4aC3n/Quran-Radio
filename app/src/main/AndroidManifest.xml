@@ -4,10 +4,17 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <application
         android:name=".QuranRadioApplication"
@@ -25,6 +32,8 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher_round"
             android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.MyApplication">
             <intent-filter>
@@ -49,8 +58,51 @@
             android:foregroundServiceType="mediaPlayback">
             <intent-filter>
                 <action android:name="androidx.media3.session.MediaSessionService" />
+                <action android:name="android.media.browse.MediaBrowserService" />
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
         </service>
+
+        <service
+            android:name=".services.AdhanPlaybackService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+
+        <receiver
+            android:name=".services.AdhanAlarmReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.example.quranradio.ACTION_PRAYER_ALARM" />
+                <action android:name="com.example.quranradio.ACTION_STOP_ADHAN" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".services.IqamahAlarmReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.example.quranradio.ACTION_IQAMAH_ALARM" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".services.HaramNotificationActionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.example.quranradio.ACTION_DISABLE_HARAM_NOTIFICATIONS" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".services.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+            </intent-filter>
+        </receiver>
 
     </application>
 

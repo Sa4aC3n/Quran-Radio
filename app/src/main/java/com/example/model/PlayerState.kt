@@ -17,6 +17,7 @@ data class PlayerState(
     val retryCount: Int = 0,
     val maxRetries: Int = 3,
     val isAutoRetrying: Boolean = false,
+    val isUserStopped: Boolean = false,
     val sleepTimerRemainingSeconds: Long = 0L,
     val isSleepTimerActive: Boolean = false,
     val playbackDurationMs: Long = 0L

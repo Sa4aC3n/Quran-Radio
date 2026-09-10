@@ -1,5 +1,8 @@
 package com.example.ui.screens
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -8,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,14 +29,20 @@ import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -53,50 +63,112 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.localization.AppLanguage
+import com.example.localization.LanguageSelectionDialog
+import com.example.localization.LocalAppLanguage
+import com.example.localization.StringKey
+import com.example.localization.appString
 import com.example.model.AppThemeMode
 import com.example.ui.components.AdminStationDialog
+import com.example.ui.components.AppUpdateDialog
+import com.example.ui.components.HaramLiveSettingsDialog
+import com.example.ui.components.IslamicSeasonSettingsDialog
+import com.example.ui.components.NotificationSettingsDialog
 import com.example.ui.components.SleepTimerDialog
-import com.example.ui.theme.BorderSubtle
+import com.example.ui.components.WeeklyListeningChartCard
+import com.example.ui.theme.EmeraldAccent
+import com.example.ui.theme.GoldAccent
 import com.example.ui.theme.NavyMuted
-import com.example.ui.theme.NavyPrimary
-import com.example.ui.theme.NavySecondary
 import com.example.ui.theme.PureWhite
-import com.example.ui.theme.SkyBlueLight
 import com.example.ui.theme.SkyBluePrimary
-import com.example.ui.theme.SoftSkyBackground
+import com.example.util.AppUpdateHelper
+import com.example.util.AppUpdateUiState
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.install.InstallStateUpdatedListener
+import com.google.android.play.core.install.model.InstallStatus
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.material.icons.filled.MenuBook
+import com.example.viewmodel.GroupKhatmaViewModel
+import com.example.viewmodel.PrayerViewModel
 import com.example.viewmodel.RadioViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     viewModel: RadioViewModel,
+    prayerViewModel: PrayerViewModel? = null,
+    groupKhatmaViewModel: GroupKhatmaViewModel? = null,
     onNavigateToAbout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val currentThemeMode by viewModel.themeMode.collectAsState()
+    val currentLanguage by viewModel.appLanguage.collectAsState()
     val isAutoPlay by viewModel.isAutoPlayEnabled.collectAsState()
     val isBackgroundPlay by viewModel.isBackgroundPlayEnabled.collectAsState()
     val isWifiOnly by viewModel.isWifiOnlyEnabled.collectAsState()
     val isNotifications by viewModel.isNotificationsEnabled.collectAsState()
+    val notificationFrequency by viewModel.notificationFrequency.collectAsState()
+    val notificationTimeWindow by viewModel.notificationTimeWindow.collectAsState()
     val playerState by viewModel.playerState.collectAsState()
     val importReport by viewModel.importReport.collectAsState()
     val isSyncing by viewModel.isSyncing.collectAsState()
     val allStations by viewModel.allStations.collectAsState()
+    val seasonState = prayerViewModel?.islamicSeasonState?.collectAsState()?.value
+    val khatmaStats = groupKhatmaViewModel?.myStats?.collectAsState()?.value
+    val weeklyStats by viewModel.weeklyListeningSummary.collectAsState()
+    val haramPreferences by viewModel.haramLivePreferences.collectAsState()
+    val context = LocalContext.current
 
+    var isLanguageDialogOpen by remember { mutableStateOf(false) }
     var isSleepTimerOpen by remember { mutableStateOf(false) }
     var isAdminDialogOpen by remember { mutableStateOf(false) }
     var isAtheerDialogOpen by remember { mutableStateOf(false) }
+    var isSeasonSettingsOpen by remember { mutableStateOf(false) }
+    var isBackgroundPermissionsOpen by remember { mutableStateOf(false) }
+    var isHaramDialogOpen by remember { mutableStateOf(false) }
+    var isNotificationSettingsDialogOpen by remember { mutableStateOf(false) }
+    var isAdhanSheetOpen by remember { mutableStateOf(false) }
+
+    val appUpdateManager = remember { AppUpdateManagerFactory.create(context) }
+    var appUpdateState by remember { mutableStateOf<AppUpdateUiState>(AppUpdateUiState.Idle) }
+
+    DisposableEffect(appUpdateManager) {
+        val listener = InstallStateUpdatedListener { state ->
+            if (state.installStatus() == InstallStatus.DOWNLOADED) {
+                appUpdateState = AppUpdateUiState.UpdateDownloaded
+            }
+        }
+        appUpdateManager.registerListener(listener)
+        onDispose {
+            appUpdateManager.unregisterListener(listener)
+        }
+    }
+
+    val isAdhanMasterEnabled = prayerViewModel?.isAdhanMasterEnabled?.collectAsState()?.value ?: true
+    val isAdhanActive = prayerViewModel?.isAdhanActive?.collectAsState()?.value ?: false
+    val currentAdhanPrayer = prayerViewModel?.currentAdhanPrayer?.collectAsState()?.value
+    val selectedAdhanSound = prayerViewModel?.selectedAdhanSound?.collectAsState()?.value ?: com.example.model.AdhanSound.MAKKAH
+    val alertSettings = prayerViewModel?.alertSettings?.collectAsState()?.value ?: emptyMap()
+    val calcMethod = prayerViewModel?.calculationMethod?.collectAsState()?.value ?: com.example.model.CalculationMethod.EGYPTIAN
+    val asrJuristic = prayerViewModel?.asrJuristic?.collectAsState()?.value ?: com.example.model.AsrJuristic.STANDARD
+    val minuteOffsets = prayerViewModel?.minuteOffsets?.collectAsState()?.value ?: emptyMap()
+    val iqamahSettings = prayerViewModel?.iqamahAlertSettings?.collectAsState()?.value ?: emptyMap()
+    val iqamahDelays = prayerViewModel?.iqamahDelays?.collectAsState()?.value ?: emptyMap()
+    val previewSoundId = prayerViewModel?.adhanAudioPlayer?.isPlayingPreview?.collectAsState()?.value
+    val adhanSheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = "الإعدادات والتفضيلات",
+                        text = appString(StringKey.SETTINGS_TITLE),
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -107,19 +179,99 @@ fun SettingsScreen(
             )
         },
         containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         modifier = modifier
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(top = innerPadding.calculateTopPadding())
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 8.dp)
                 .testTag("settings_screen_content")
         ) {
+            // Section 0: Language Switcher (Multilingual Selection)
+            Text(
+                text = appString(StringKey.LANGUAGE_SETTINGS_SECTION),
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = SkyBluePrimary
+                ),
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp))
+                    .clickable { isLanguageDialogOpen = true }
+                    .testTag("settings_language_card"),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(SkyBluePrimary.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = currentLanguage.flag,
+                            fontSize = 22.sp
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(14.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = appString(StringKey.SETTINGS_LANGUAGE),
+                            style = MaterialTheme.typography.titleSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "${currentLanguage.nativeName} (${currentLanguage.englishName})",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = SkyBluePrimary,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        )
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = SkyBluePrimary.copy(alpha = 0.1f),
+                        border = BorderStroke(1.dp, SkyBluePrimary.copy(alpha = 0.3f))
+                    ) {
+                        Text(
+                            text = appString(StringKey.LANGUAGE_CURRENT),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = SkyBluePrimary,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
             // Section 1: Theme & Appearance (Light / Dark Mode Switcher)
             Text(
-                text = "المظهر والوضع الليلي",
+                text = appString(StringKey.SETTINGS_THEME),
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
                     color = SkyBluePrimary
@@ -158,7 +310,7 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "نمط المظهر",
+                                text = appString(StringKey.SETTINGS_THEME),
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
@@ -167,9 +319,9 @@ fun SettingsScreen(
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = when (currentThemeMode) {
-                                    AppThemeMode.SYSTEM -> "تلقائي (يتبع الوضع الافتراضي للجهاز)"
-                                    AppThemeMode.LIGHT -> "الوضع النهاري الفاتح"
-                                    AppThemeMode.DARK -> "الوضع الليلي الداكن"
+                                    AppThemeMode.SYSTEM -> appString(StringKey.THEME_SYSTEM)
+                                    AppThemeMode.LIGHT -> appString(StringKey.THEME_LIGHT)
+                                    AppThemeMode.DARK -> appString(StringKey.THEME_DARK)
                                 },
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -187,8 +339,7 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         ThemeOptionButton(
-                            title = "فاتح",
-                            subtitle = "الافتراضي",
+                            title = appString(StringKey.THEME_LIGHT),
                             icon = Icons.Default.LightMode,
                             isSelected = currentThemeMode == AppThemeMode.LIGHT,
                             onClick = { viewModel.setThemeMode(AppThemeMode.LIGHT) },
@@ -198,8 +349,7 @@ fun SettingsScreen(
                         )
 
                         ThemeOptionButton(
-                            title = "داكن",
-                            subtitle = "ليلي",
+                            title = appString(StringKey.THEME_DARK),
                             icon = Icons.Default.DarkMode,
                             isSelected = currentThemeMode == AppThemeMode.DARK,
                             onClick = { viewModel.setThemeMode(AppThemeMode.DARK) },
@@ -209,8 +359,7 @@ fun SettingsScreen(
                         )
 
                         ThemeOptionButton(
-                            title = "تلقائي",
-                            subtitle = "النظام",
+                            title = appString(StringKey.THEME_SYSTEM),
                             icon = Icons.Default.BrightnessAuto,
                             isSelected = currentThemeMode == AppThemeMode.SYSTEM,
                             onClick = { viewModel.setThemeMode(AppThemeMode.SYSTEM) },
@@ -226,7 +375,7 @@ fun SettingsScreen(
 
             // Section 2: Playback Settings
             Text(
-                text = "إعدادات التشغيل والبث",
+                text = appString(StringKey.SETTINGS_PLAYBACK_SECTION),
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
                     color = SkyBluePrimary
@@ -244,8 +393,8 @@ fun SettingsScreen(
                 Column(modifier = Modifier.padding(16.dp)) {
                     SettingSwitchRow(
                         icon = Icons.Default.PlayCircle,
-                        title = "التشغيل التلقائي عند فتح التطبيق",
-                        description = "مواصلة تشغيل آخر محطة كنت تستمع إليها مباشرة عند بدء التطبيق",
+                        title = appString(StringKey.SETTINGS_AUTO_PLAY),
+                        description = appString(StringKey.SETTINGS_AUTO_PLAY_DESC),
                         checked = isAutoPlay,
                         onCheckedChange = { viewModel.setAutoPlay(it) }
                     )
@@ -254,8 +403,8 @@ fun SettingsScreen(
 
                     SettingSwitchRow(
                         icon = Icons.Default.PlayCircle,
-                        title = "الاستمرار في الخلفية",
-                        description = "استمرار تشغيل التلاوة عند إغلاق الشاشة أو الانتقال لتطبيقات أخرى",
+                        title = appString(StringKey.SETTINGS_BACKGROUND_PLAY),
+                        description = appString(StringKey.SETTINGS_BACKGROUND_PLAY_DESC),
                         checked = isBackgroundPlay,
                         onCheckedChange = { viewModel.setBackgroundPlay(it) }
                     )
@@ -264,21 +413,211 @@ fun SettingsScreen(
 
                     SettingSwitchRow(
                         icon = Icons.Default.Wifi,
-                        title = "البث عبر Wi-Fi فقط",
-                        description = "توفير بيانات الهاتف ومنع الاستماع إلا عند الاتصال بشبكة Wi-Fi",
+                        title = appString(StringKey.SETTINGS_WIFI_ONLY),
+                        description = appString(StringKey.SETTINGS_WIFI_ONLY_DESC),
                         checked = isWifiOnly,
                         onCheckedChange = { viewModel.setWifiOnly(it) }
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    SettingSwitchRow(
-                        icon = Icons.Default.Notifications,
-                        title = "إشعارات التحكم في المشغل",
-                        description = "إظهار أزرار الإيقاف والتشغيل والتنقل في شريط الإشعارات وشاشة القفل",
-                        checked = isNotifications,
-                        onCheckedChange = { viewModel.setNotificationsEnabled(it) }
-                    )
+                    // Notifications Row with Direct customization
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .clickable { isNotificationSettingsDialogOpen = true }
+                            .padding(vertical = 6.dp)
+                            .testTag("settings_notifications_item"),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (isNotifications) SkyBluePrimary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = if (isNotifications) Icons.Default.Notifications else Icons.Default.Notifications,
+                                contentDescription = null,
+                                tint = if (isNotifications) SkyBluePrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = appString(StringKey.SETTINGS_NOTIFICATIONS),
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 15.sp,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = SkyBluePrimary.copy(alpha = 0.15f)
+                                ) {
+                                    Text(
+                                        text = "تخصيص",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = SkyBluePrimary,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                            Text(
+                                text = if (isNotifications) {
+                                    val freqText = when (notificationFrequency) {
+                                        "prayers_5" -> "الصلوات الخمس فقط"
+                                        "twice_daily" -> "إشعاران يومياً"
+                                        "once_daily" -> "إشعار واحد يومياً"
+                                        else -> "كافة الإشعارات"
+                                    }
+                                    val windowText = when (notificationTimeWindow) {
+                                        "daytime_only" -> "فترة النهار"
+                                        "quiet_night" -> "الهدوء الليلي"
+                                        "custom_hours" -> "07:00 ص - 10:00 م"
+                                        else -> "طوال اليوم"
+                                    }
+                                    "$freqText • $windowText (اضغط للتعديل)"
+                                } else {
+                                    "متوقفة تماماً (اضغط للتشغيل والتخصيص)"
+                                },
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = isNotifications,
+                            onCheckedChange = { viewModel.setNotificationsEnabled(it) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = PureWhite,
+                                checkedTrackColor = SkyBluePrimary
+                            ),
+                            modifier = Modifier.testTag("switch_notifications_quick")
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Haram Live Recitation Notification Row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .clickable { isHaramDialogOpen = true }
+                            .padding(vertical = 6.dp)
+                            .testTag("settings_haram_live_item"),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(GoldAccent.copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "🕋",
+                                fontSize = 20.sp
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "الآن يُقرأ في الحرم",
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = if (haramPreferences.isEnabled) EmeraldAccent.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant
+                                ) {
+                                    Text(
+                                        text = if (haramPreferences.isEnabled) "مفعّل" else "اختياري",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            color = if (haramPreferences.isEnabled) EmeraldAccent else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 10.sp
+                                        ),
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                            Text(
+                                text = if (haramPreferences.isEnabled)
+                                    "تنبيه لطيف لتلاوات ${haramPreferences.source.titleAr}"
+                                else
+                                    "إشعار لطيف واختياري عند بدء تلاوة سورة في البث المباشر للحرمين",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 11.sp
+                                )
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Default.ChevronLeft,
+                            contentDescription = null,
+                            tint = NavyMuted
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Background Permissions & Battery Optimization Guidance Row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .clickable { isBackgroundPermissionsOpen = true }
+                            .padding(vertical = 6.dp)
+                            .testTag("settings_background_permissions_item"),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(SkyBluePrimary.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = null,
+                                tint = SkyBluePrimary,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "دقة الأذان والتطبيق مغلق (إدارة البطارية)",
+                                style = MaterialTheme.typography.titleSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            )
+                            Text(
+                                text = "إلغاء قيود البطارية وأذونات المنبهات الدقيقة وتشغيل الأذان 100%",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 11.sp
+                                )
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Default.ChevronLeft,
+                            contentDescription = null,
+                            tint = NavyMuted
+                        )
+                    }
                 }
             }
 
@@ -286,7 +625,7 @@ fun SettingsScreen(
 
             // Section 3: Tools & Timer
             Text(
-                text = "الأدوات والمؤقت",
+                text = appString(StringKey.SETTINGS_TOOLS_SECTION),
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
                     color = SkyBluePrimary
@@ -328,14 +667,19 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "مؤقت النوم الإيقافي",
+                                text = appString(StringKey.SETTINGS_SLEEP_TIMER),
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             )
+                            val timerDesc = if (playerState.isSleepTimerActive) {
+                                "${appString(StringKey.SLEEP_TIMER_STATUS_ACTIVE)} (${playerState.sleepTimerRemainingSeconds / 60} ${appString(StringKey.SLEEP_TIMER_MINUTES)})"
+                            } else {
+                                appString(StringKey.SETTINGS_SLEEP_TIMER_DESC)
+                            }
                             Text(
-                                text = if (playerState.isSleepTimerActive) "المؤقت نشط (${playerState.sleepTimerRemainingSeconds / 60} دقيقة متبقية)" else "حدد وقتًا لإيقاف البث تلقائيًا قبل النوم",
+                                text = timerDesc,
                                 style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                             )
                         }
@@ -374,14 +718,14 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "إضافة محطة إذاعية مخصصة",
+                                text = appString(StringKey.SETTINGS_CUSTOM_STATION),
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             )
                             Text(
-                                text = "إدخال رابط بث مباشر Stream URL خاص بك",
+                                text = appString(StringKey.SETTINGS_CUSTOM_STATION_DESC),
                                 style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                             )
                         }
@@ -421,14 +765,14 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "مكتبة إذاعات أثير راديو (Atheer Radio)",
+                                text = appString(StringKey.ATHEER_SYNC_TITLE),
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             )
                             Text(
-                                text = "فحص ومزامنة روابط البث المتعددة والروابط الاحتياطية",
+                                text = appString(StringKey.ATHEER_SYNC_SUBTITLE),
                                 style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                             )
                         }
@@ -443,9 +787,244 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Section 4: About Application
+            // Section 3.2: Adhan & Prayer Integration
+            if (prayerViewModel != null) {
+                Text(
+                    text = "الأذان ومواقيت الصلاة",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = SkyBluePrimary
+                    ),
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("settings_adhan_card"),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, SkyBluePrimary.copy(alpha = 0.35f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        // Live In-App Adhan Playing Banner
+                        if (isAdhanActive) {
+                            Surface(
+                                shape = RoundedCornerShape(14.dp),
+                                color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 14.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "🕌 صوت الأذان يعمل الآن (${currentAdhanPrayer?.arabicName ?: "الصلاة"})",
+                                            fontWeight = FontWeight.Bold,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                        Text(
+                                            text = "تم إيقاف الإذاعة مؤقتاً وستستأنف تلقائياً بعد الأذان",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    androidx.compose.material3.Button(
+                                        onClick = { prayerViewModel.stopAdhanService() },
+                                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                                        shape = RoundedCornerShape(10.dp),
+                                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                                    ) {
+                                        Text("إيقاف", color = MaterialTheme.colorScheme.onError, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                    }
+                                }
+                            }
+                        }
+
+                        // Master Adhan Switch
+                        SettingSwitchRow(
+                            icon = Icons.Default.Notifications,
+                            title = "تشغيل صوت الأذان التلقائي",
+                            description = "إيقاف الإذاعة مؤقتاً وتشغيل الأذان عند دخول الوقت ثم استئنافها تلقائياً",
+                            checked = isAdhanMasterEnabled,
+                            onCheckedChange = { prayerViewModel.setAdhanMasterEnabled(it) }
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f), thickness = 0.5.dp)
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Adhan Voice Picker Row
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(14.dp))
+                                .clickable { isAdhanSheetOpen = true }
+                                .padding(vertical = 6.dp)
+                                .testTag("settings_adhan_voice_item"),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.primaryContainer),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = "🕌", fontSize = 20.sp)
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "صوت الأذان والمؤذن",
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "${selectedAdhanSound.titleAr} (${selectedAdhanSound.muezzinAr})",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = SkyBluePrimary,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                )
+                            }
+                            Icon(
+                                imageVector = Icons.Default.ChevronLeft,
+                                contentDescription = null,
+                                tint = NavyMuted
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f), thickness = 0.5.dp)
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Test / Stop Button & Settings Sheet Trigger
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            if (isAdhanActive) {
+                                androidx.compose.material3.Button(
+                                    onClick = { prayerViewModel.stopAdhanService() },
+                                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text("⏹️ إيقاف صوت الأذان", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                }
+                            } else {
+                                androidx.compose.material3.Button(
+                                    onClick = { prayerViewModel.triggerAdhanNotificationTest(com.example.model.PrayerType.MAGHRIB) },
+                                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = SkyBluePrimary),
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text("▶️ اختبار الأذان مع الإذاعة", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                }
+                            }
+
+                            androidx.compose.material3.OutlinedButton(
+                                onClick = { isAdhanSheetOpen = true },
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text("تخصيص المواقيت", fontSize = 12.sp)
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+            }
+
+            // Section 3.5: Ramadan & Hajj Season Settings
+            if (seasonState != null && prayerViewModel != null) {
+                Text(
+                    text = "وضع رمضان وموسم الحج المبارك",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = GoldAccent
+                    ),
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("settings_season_card"),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, GoldAccent.copy(alpha = 0.5f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(14.dp))
+                                .clickable { isSeasonSettingsOpen = true }
+                                .padding(vertical = 6.dp)
+                                .testTag("settings_season_item"),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(GoldAccent.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = if (seasonState.isRamadanActive) "🌙" else if (seasonState.isHajjActive) "🕋" else "✨",
+                                    fontSize = 20.sp
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "تخصيص وضع المواسم (رمضان والحج)",
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "${seasonState.overrideMode.titleAr} • ${seasonState.hijriDetails.formattedAr}",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 11.sp
+                                    )
+                                )
+                            }
+                            Icon(
+                                imageVector = Icons.Default.ChevronLeft,
+                                contentDescription = null,
+                                tint = GoldAccent
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+            }
+
+            // Section: Weekly Quran Listening Stats (إحصائيات استماع القرآن خلال الأسبوع)
             Text(
-                text = "حول التطبيق",
+                text = "إحصائيات الاستماع للقرآن",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
                     color = SkyBluePrimary
@@ -453,65 +1032,296 @@ fun SettingsScreen(
                 modifier = Modifier.padding(vertical = 8.dp)
             )
 
-            Card(
+            WeeklyListeningChartCard(summary = weeklyStats)
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Section: My Group Khatmas Stats (ختماتي القرآنية)
+            if (khatmaStats != null) {
+                Text(
+                    text = "الختمات الجماعية والقرآن الكريم",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = SkyBluePrimary
+                    ),
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("settings_khatma_stats_card"),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, SkyBluePrimary.copy(alpha = 0.3f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(SkyBluePrimary.copy(alpha = 0.12f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.MenuBook,
+                                    contentDescription = null,
+                                    tint = SkyBluePrimary,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "إحصائيات مشاركاتك",
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                )
+                                Text(
+                                    text = "الختمات النشطة والأجزاء التي قرأتها",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 11.sp
+                                    )
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceAround
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "${khatmaStats.totalKhatmasJoined}",
+                                    style = MaterialTheme.typography.titleLarge.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = SkyBluePrimary
+                                    )
+                                )
+                                Text(
+                                    text = "ختمة مشارك بها",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                )
+                            }
+
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "${khatmaStats.totalPartsCompleted}",
+                                    style = MaterialTheme.typography.titleLarge.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = com.example.ui.theme.EmeraldAccent
+                                    )
+                                )
+                                Text(
+                                    text = "أجزاء أتممتها",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                )
+                            }
+
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "${khatmaStats.totalPartsReserved}",
+                                    style = MaterialTheme.typography.titleLarge.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = GoldAccent
+                                    )
+                                )
+                                Text(
+                                    text = "قيد القراءة",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+            }
+
+            // Section 4: About Application
+            Text(
+                text = appString(StringKey.NAV_ABOUT),
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = SkyBluePrimary
+                ),
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .testTag("settings_about_card"),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
+                // 1. About Card (عن التطبيق)
+                Card(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(22.dp))
+                        .clickable { onNavigateToAbout() }
+                        .testTag("settings_about_card"),
+                    shape = RoundedCornerShape(22.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+                ) {
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(14.dp))
-                            .clickable { onNavigateToAbout() }
-                            .padding(vertical = 6.dp)
-                            .testTag("settings_about_item"),
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.Start
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.primaryContainer),
-                            contentAlignment = Alignment.Center
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Info,
-                                contentDescription = "حول التطبيق",
-                                tint = SkyBluePrimary,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "حول التطبيق",
-                                style = MaterialTheme.typography.titleSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(RoundedCornerShape(13.dp))
+                                    .background(MaterialTheme.colorScheme.primaryContainer),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = appString(StringKey.NAV_ABOUT),
+                                    tint = SkyBluePrimary,
+                                    modifier = Modifier.size(22.dp)
                                 )
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "إذاعات القرآن الكريم • الإصدار ${com.example.BuildConfig.VERSION_NAME}",
-                                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Icon(
+                                imageVector = Icons.Default.ChevronLeft,
+                                contentDescription = null,
+                                tint = NavyMuted.copy(alpha = 0.6f),
+                                modifier = Modifier.size(20.dp)
                             )
                         }
-                        Icon(
-                            imageVector = Icons.Default.ChevronLeft,
-                            contentDescription = null,
-                            tint = NavyMuted
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        Text(
+                            text = appString(StringKey.NAV_ABOUT),
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            ),
+                            maxLines = 1
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "${appString(StringKey.APP_TITLE)} • ${com.example.BuildConfig.VERSION_NAME}",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            maxLines = 1
+                        )
+                    }
+                }
+
+                // 2. App Update Card (تحديث التطبيق)
+                Card(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(22.dp))
+                        .clickable {
+                            AppUpdateHelper.checkForAppUpdate(
+                                context = context,
+                                appUpdateManager = appUpdateManager,
+                                onStateChange = { appUpdateState = it }
+                            )
+                        }
+                        .testTag("settings_update_app_card"),
+                    shape = RoundedCornerShape(22.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(RoundedCornerShape(13.dp))
+                                    .background(SkyBluePrimary.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.SystemUpdate,
+                                    contentDescription = "تحديث التطبيق",
+                                    tint = SkyBluePrimary,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                            Icon(
+                                imageVector = Icons.Default.ChevronLeft,
+                                contentDescription = null,
+                                tint = NavyMuted.copy(alpha = 0.6f),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        Text(
+                            text = "تحديث التطبيق",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            ),
+                            maxLines = 1
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "فحص أحدث نسخة",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            maxLines = 1
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(90.dp))
+            Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+
+    // Language Dialog
+    if (isLanguageDialogOpen) {
+        LanguageSelectionDialog(
+            currentLanguage = currentLanguage,
+            onLanguageSelected = { lang ->
+                viewModel.setAppLanguage(lang)
+            },
+            onDismiss = { isLanguageDialogOpen = false }
+        )
     }
 
     // Sleep Timer Dialog
@@ -540,12 +1350,122 @@ fun SettingsScreen(
         onSyncNow = { viewModel.syncAtheerRadios() },
         onDismiss = { isAtheerDialogOpen = false }
     )
+
+    // Islamic Season Settings Dialog
+    if (isSeasonSettingsOpen && seasonState != null && prayerViewModel != null) {
+        IslamicSeasonSettingsDialog(
+            seasonState = seasonState,
+            onSetSeasonMode = { prayerViewModel.setSeasonModeOverride(it) },
+            onSetHijriOffset = { delta ->
+                prayerViewModel.setHijriOffsetDays((prayerViewModel.hijriOffsetDays.value + delta).coerceIn(-3, 3))
+            },
+            onToggleRamadanBanner = { prayerViewModel.setRamadanBannerEnabled(it) },
+            onToggleHajjBanner = { prayerViewModel.setHajjBannerEnabled(it) },
+            onToggleTaraweehAlert = { prayerViewModel.setTaraweehAlertEnabled(it) },
+            onToggleSuhoorAlert = { prayerViewModel.setSuhoorAlertEnabled(it) },
+            onSetStreamSource = { prayerViewModel.setSeasonStreamSource(it) },
+            onDismiss = { isSeasonSettingsOpen = false }
+        )
+    }
+
+    // Haram Live Settings Dialog
+    HaramLiveSettingsDialog(
+        isOpen = isHaramDialogOpen,
+        preferences = haramPreferences,
+        onToggleEnabled = { viewModel.setHaramLiveEnabled(it) },
+        onSetSource = { viewModel.setHaramLiveSource(it) },
+        onToggleFavoriteOnly = { viewModel.setHaramLiveFavoriteOnly(it) },
+        onToggleFavoriteSurah = { viewModel.toggleHaramFavoriteSurah(it) },
+        onSetDailyLimit = { viewModel.setHaramDailyLimit(it) },
+        onTestNotification = { src ->
+            viewModel.testHaramLiveNotification(source = src)
+        },
+        onDismiss = { isHaramDialogOpen = false }
+    )
+
+    // Background Permissions & Battery Optimization Guide Dialog
+    com.example.ui.components.BackgroundPermissionExplanationDialog(
+        isOpen = isBackgroundPermissionsOpen,
+        onDismiss = { isBackgroundPermissionsOpen = false }
+    )
+
+    // Adhan Customization Bottom Sheet
+    if (isAdhanSheetOpen && prayerViewModel != null) {
+        com.example.ui.components.AdhanSettingsBottomSheet(
+            sheetState = adhanSheetState,
+            currentMethod = calcMethod,
+            currentAsrJuristic = asrJuristic,
+            selectedAdhanSound = selectedAdhanSound,
+            previewPlayingSoundId = previewSoundId,
+            minuteOffsets = minuteOffsets,
+            iqamahSettings = iqamahSettings,
+            iqamahDelays = iqamahDelays,
+            onSelectMethod = { prayerViewModel.setCalculationMethod(it) },
+            onSelectAsrJuristic = { prayerViewModel.setAsrJuristic(it) },
+            onSelectAdhanSound = { prayerViewModel.setAdhanSound(it) },
+            onPlayPreviewSound = { prayerViewModel.adhanAudioPlayer.playPreview(it) },
+            onStopPreviewSound = { prayerViewModel.adhanAudioPlayer.stopPreview() },
+            onTestAdhanNotification = { prayerViewModel.triggerAdhanNotificationTest(com.example.model.PrayerType.MAGHRIB) },
+            onStopAdhanNotification = { prayerViewModel.stopAdhanService() },
+            onToggleIqamah = { prayer, enabled -> prayerViewModel.toggleIqamahAlert(prayer, enabled) },
+            onSetIqamahDelay = { prayer, delay -> prayerViewModel.setIqamahDelay(prayer, delay) },
+            onSetMinuteOffset = { prayer, offset -> prayerViewModel.setMinuteOffset(prayer, offset) },
+            onOpenBatteryGuide = {
+                isAdhanSheetOpen = false
+                isBackgroundPermissionsOpen = true
+            },
+            onDismiss = { isAdhanSheetOpen = false }
+        )
+    }
+
+    // App Update Dialog
+    AppUpdateDialog(
+        uiState = appUpdateState,
+        onUpdateNow = {
+            val currentInfo = (appUpdateState as? AppUpdateUiState.UpdateAvailable)?.appUpdateInfo
+            AppUpdateHelper.startUpdate(
+                context = context,
+                appUpdateManager = appUpdateManager,
+                appUpdateInfo = currentInfo,
+                onDismiss = { appUpdateState = AppUpdateUiState.Idle }
+            )
+        },
+        onOpenPlayStore = {
+            AppUpdateHelper.openPlayStore(context)
+            appUpdateState = AppUpdateUiState.Idle
+        },
+        onRetry = {
+            AppUpdateHelper.checkForAppUpdate(
+                context = context,
+                appUpdateManager = appUpdateManager,
+                onStateChange = { appUpdateState = it }
+            )
+        },
+        onCompleteFlexibleUpdate = {
+            appUpdateManager.completeUpdate()
+            appUpdateState = AppUpdateUiState.Idle
+        },
+        onDismiss = {
+            appUpdateState = AppUpdateUiState.Idle
+        }
+    )
+
+    // Notification Customization Dialog (Frequency, Duration & Master Stop)
+    NotificationSettingsDialog(
+        isOpen = isNotificationSettingsDialogOpen,
+        isNotificationsEnabled = isNotifications,
+        notificationFrequency = notificationFrequency,
+        notificationTimeWindow = notificationTimeWindow,
+        onToggleNotifications = { viewModel.setNotificationsEnabled(it) },
+        onSetFrequency = { viewModel.setNotificationFrequency(it) },
+        onSetTimeWindow = { viewModel.setNotificationTimeWindow(it) },
+        onDismiss = { isNotificationSettingsDialogOpen = false }
+    )
 }
 
 @Composable
 private fun ThemeOptionButton(
     title: String,
-    subtitle: String,
     icon: ImageVector,
     isSelected: Boolean,
     onClick: () -> Unit,
@@ -566,7 +1486,7 @@ private fun ThemeOptionButton(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 12.dp, horizontal = 8.dp),
+                .padding(vertical = 14.dp, horizontal = 4.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -576,20 +1496,15 @@ private fun ThemeOptionButton(
                 tint = if (isSelected) PureWhite else SkyBluePrimary,
                 modifier = Modifier.size(24.dp)
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = title,
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                    fontSize = 13.sp
-                )
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.labelSmall.copy(
-                    color = if (isSelected) PureWhite.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 10.sp
-                )
+                    fontSize = 12.5.sp
+                ),
+                maxLines = 1,
+                textAlign = TextAlign.Center
             )
         }
     }
@@ -651,3 +1566,36 @@ private fun SettingSwitchRow(
         )
     }
 }
+
+private fun shareAppFromSettings(
+    context: Context,
+    text: String = "استمع إلى القرآن الكريم من إذاعات العالم عبر تطبيق Quran Radio World ❤️\nhttps://play.google.com/store/apps/details?id=com.aistudio.quranradioworld.live"
+) {
+    try {
+        val sendIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, text)
+            type = "text/plain"
+        }
+        val shareIntent = Intent.createChooser(sendIntent, "مشاركة التطبيق")
+        context.startActivity(shareIntent)
+    } catch (_: Exception) {}
+}
+
+private fun openPlayStoreFromSettings(context: Context) {
+    val packageName = "com.aistudio.quranradioworld.live"
+    try {
+        val marketIntent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        context.startActivity(marketIntent)
+    } catch (e: Exception) {
+        try {
+            val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName")).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            context.startActivity(webIntent)
+        } catch (_: Exception) {}
+    }
+}
+

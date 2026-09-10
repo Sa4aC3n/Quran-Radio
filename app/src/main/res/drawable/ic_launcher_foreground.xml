@@ -4,44 +4,72 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Radio antenna & central tower / minaret shape -->
-    <!-- Sound Waves / Broadcast rings -->
-    <path
-        android:strokeColor="#E0F7FA"
-        android:strokeWidth="3"
-        android:strokeLineCap="round"
-        android:fillColor="#00000000"
-        android:pathData="M38,40 C42,35 48,32 54,32 C60,32 66,35 70,40" />
-    <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="3.5"
-        android:strokeLineCap="round"
-        android:fillColor="#00000000"
-        android:pathData="M30,32 C37,25 45,21 54,21 C63,21 71,25 78,32" />
 
-    <!-- Radio / Minaret Spire & Crescent -->
-    <!-- Crescent Moon at Top -->
-    <path
-        android:fillColor="#FFD166"
-        android:pathData="M54,12 C52.5,12 50.8,12.5 49.5,13.5 C52.5,14.5 54.5,17.2 54.5,20.5 C54.5,23.8 52.5,26.5 49.5,27.5 C50.8,28.5 52.5,29 54,29 C58.7,29 62.5,25.2 62.5,20.5 C62.5,15.8 58.7,12 54,12 Z" />
-
-    <!-- Radio Tower Body / Islamic Dome -->
+    <!-- 1. Central Rounded Squircle Card (Pure White) strictly within safe zone (66dp zone centered at 54,54) -->
+    <!-- Card occupies x: 23 to 85 (width 62), y: 23 to 85 (height 62) with smooth corner radius -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M54,36 C46,36 41,43 41,51 L67,51 C67,43 62,36 54,36 Z" />
+        android:pathData="M 39,23
+            L 69,23
+            C 81,23 85,27 85,39
+            L 85,69
+            C 85,81 81,85 69,85
+            L 39,85
+            C 27,85 23,81 23,69
+            L 23,39
+            C 23,27 27,23 39,23
+            Z" />
 
-    <!-- Radio Sound Wave Equalizer Bars -->
+    <!-- 2. Radio Antenna (Angled Bar on top of the radio body) -->
+    <!-- Originates from top right side of radio body (~60, 42) to top center (~45, 36) -->
     <path
-        android:fillColor="#EAF8FF"
-        android:pathData="M44,48 L46,48 L46,44 L44,44 Z M50,48 L52,48 L52,41 L50,41 Z M56,48 L58,48 L58,41 L56,41 Z M62,48 L64,48 L64,44 L62,44 Z" />
+        android:fillColor="#38BDF8"
+        android:pathData="M 61.2,42.5
+            L 45.8,36.4
+            C 44.9,36.0 44.5,35.0 44.9,34.1
+            C 45.3,33.2 46.3,32.8 47.2,33.2
+            L 62.6,39.3
+            C 63.5,39.7 63.9,40.7 63.5,41.6
+            C 63.1,42.4 62.1,42.8 61.2,42.5
+            Z" />
 
-    <!-- Open Quran Book Silhouette at the base -->
+    <!-- 3. Radio Main Body (Sky Blue Rounded Rectangle) -->
+    <!-- Bounds: x: 37 to 71 (width 34), y: 42 to 67 (height 25), corner radius ~ 4 -->
+    <!-- Outer Radio Box with smooth rounded corners -->
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M 41,42
+            L 67,42
+            C 69.5,42 71,43.5 71,46
+            L 71,63
+            C 71,65.5 69.5,67 67,67
+            L 41,67
+            C 38.5,67 37,65.5 37,63
+            L 37,46
+            C 37,43.5 38.5,42 41,42
+            Z" />
+
+    <!-- 4. Top White Tuner Display Bar & Scale Notch -->
+    <!-- Display bar: x: 40 to 68, y: 45.2 to 51.5 (height 6.3) with white fill -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M54,58 L54,78 C50,74.5 43,73 34,74 C33.4,74 33,74.5 33,75.1 L33,83.5 C33,84.2 33.6,84.7 34.3,84.6 C42.5,83.5 49,85 53.5,88.5 C53.8,88.7 54.2,88.7 54.5,88.5 C59,85 65.5,83.5 73.7,84.6 C74.4,84.7 75,84.2 75,83.5 L75,75.1 C75,74.5 74.6,74 74,74 C65,73 58,74.5 54,78 Z" />
+        android:pathData="M 40.2,45.2
+            L 67.8,45.2
+            L 67.8,51.5
+            L 64.2,51.5
+            L 64.2,55.0
+            L 61.0,55.0
+            L 61.0,51.5
+            L 40.2,51.5
+            Z" />
 
-    <!-- Book spine highlight & bookmark accent -->
+    <!-- 5. Bottom Circular Speaker / Dial (Pure White circle on bottom-left) -->
+    <!-- Center: (45, 59.2), Radius: 5.2 -->
     <path
-        android:fillColor="#5BC0EB"
-        android:pathData="M52.5,58 L55.5,58 L55.5,74 L54,72.5 L52.5,74 Z" />
+        android:fillColor="#FFFFFF"
+        android:pathData="M 45,54
+            a 5.2,5.2 0 1,0 0,10.4
+            a 5.2,5.2 0 1,0 0,-10.4
+            Z" />
+
 </vector>

@@ -19,9 +19,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,6 +45,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.localization.LocalAppLanguage
+import com.example.localization.StationTranslator
+import com.example.localization.StringKey
+import com.example.localization.appString
+import com.example.localization.localizedName
 import com.example.model.PlaybackStatus
 import com.example.ui.components.StationCard
 import com.example.ui.theme.PureWhite
@@ -61,12 +68,18 @@ fun ReciterDetailScreen(
     val reciterStations = viewModel.getStationsForReciter(reciterId)
     val playerState by viewModel.playerState.collectAsState()
 
+    val currentLang = LocalAppLanguage.current
+    val reciterDisplayName = reciter?.localizedName(currentLang) ?: appString(StringKey.RECITERS_TITLE)
+    val localizedStyle = if (reciter != null) StationTranslator.getReciterStyle(reciter.styleAr, currentLang) else ""
+    val localizedCountry = if (reciter != null) StationTranslator.getCountryName("", reciter.country, "", currentLang) else ""
+    val localizedBio = if (reciter != null) StationTranslator.getReciterBio(reciter, currentLang) else ""
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = reciter?.nameAr ?: "القارئ",
+                        text = reciterDisplayName,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -75,7 +88,7 @@ fun ReciterDetailScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "رجوع",
+                            contentDescription = appString(StringKey.NAV_BACK),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -126,7 +139,7 @@ fun ReciterDetailScreen(
                             if (reciter?.avatarUrl?.isNotBlank() == true) {
                                 AsyncImage(
                                     model = reciter.avatarUrl,
-                                    contentDescription = reciter.nameAr,
+                                    contentDescription = reciterDisplayName,
                                     modifier = Modifier
                                         .size(80.dp)
                                         .clip(CircleShape),
@@ -145,7 +158,7 @@ fun ReciterDetailScreen(
                         Spacer(modifier = Modifier.height(12.dp))
 
                         Text(
-                            text = reciter?.nameAr ?: "",
+                            text = reciterDisplayName,
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -155,7 +168,7 @@ fun ReciterDetailScreen(
                         Spacer(modifier = Modifier.height(4.dp))
 
                         Text(
-                            text = "${reciter?.styleAr ?: ""} • ${reciter?.country ?: ""}",
+                            text = if (localizedCountry.isNotBlank()) "$localizedStyle • $localizedCountry" else localizedStyle,
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontWeight = FontWeight.Medium
@@ -165,7 +178,7 @@ fun ReciterDetailScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = reciter?.bioAr ?: "",
+                            text = localizedBio,
                             style = MaterialTheme.typography.bodySmall.copy(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 12.sp
@@ -178,10 +191,12 @@ fun ReciterDetailScreen(
                         // Quick Live Play Button
                         if (reciterStations.isNotEmpty()) {
                             val primaryStation = reciterStations.first()
-                            val isPlaying = playerState.currentStation?.id == primaryStation.id && playerState.status == PlaybackStatus.PLAYING
+                            val isCurrentStation = playerState.currentStation?.id == primaryStation.id
+                            val isPlaying = isCurrentStation && playerState.status == PlaybackStatus.PLAYING
+                            val isConnecting = isCurrentStation && (playerState.status == PlaybackStatus.CONNECTING || playerState.status == PlaybackStatus.BUFFERING)
                             Button(
                                 onClick = {
-                                    if (isPlaying) {
+                                    if (isCurrentStation) {
                                         viewModel.togglePlayPause()
                                     } else {
                                         viewModel.playStation(primaryStation)
@@ -193,13 +208,21 @@ fun ReciterDetailScreen(
                                 ),
                                 shape = RoundedCornerShape(16.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.PlayArrow,
-                                    contentDescription = null
-                                )
+                                if (isConnecting) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(18.dp),
+                                        color = if (isPlaying) PureWhite else SkyBluePrimary,
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                        contentDescription = null
+                                    )
+                                }
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = if (isPlaying) "البث المباشر قيد التشغيل الآن" else "بدء الاستماع للبث المباشر (24/7)",
+                                    text = if (isPlaying) appString(StringKey.PLAYER_STATUS_PLAYING) else appString(StringKey.MINI_PLAYER_PLAY),
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -211,7 +234,7 @@ fun ReciterDetailScreen(
             // Stations list for this reciter
             item {
                 Text(
-                    text = "محطات البث المباشر للقارئ (${reciterStations.size})",
+                    text = "${appString(StringKey.RECITER_DETAIL_STATIONS_TITLE)} (${reciterStations.size})",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -248,3 +271,4 @@ fun ReciterDetailScreen(
         }
     }
 }
+
