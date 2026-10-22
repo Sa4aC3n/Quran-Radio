@@ -5,11 +5,15 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.model.AcousticEnvironment
+import com.example.model.AmbientSoundscape
 import com.example.model.AppThemeMode
+import com.example.model.SpatialAudioConfig
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -31,6 +35,21 @@ class UserPreferencesRepository(context: Context) {
     private val KEY_THEME_MODE = stringPreferencesKey("app_theme_mode")
     private val KEY_APP_LANGUAGE = stringPreferencesKey("app_language")
     private val KEY_COUNTRIES_GRID_COLUMNS = intPreferencesKey("countries_grid_columns")
+    private val KEY_SPATIAL_ENABLED = booleanPreferencesKey("spatial_audio_enabled")
+    private val KEY_SPATIAL_ENVIRONMENT = stringPreferencesKey("spatial_audio_environment")
+    private val KEY_SPATIAL_WET_LEVEL = floatPreferencesKey("spatial_audio_wet_level")
+    private val KEY_AMBIENT_SOUNDSCAPE = stringPreferencesKey("spatial_ambient_soundscape")
+    private val KEY_AMBIENT_VOLUME = floatPreferencesKey("spatial_ambient_volume")
+
+    val spatialAudioConfig: Flow<SpatialAudioConfig> = appContext.dataStore.data.map { preferences ->
+        SpatialAudioConfig(
+            isEnabled = preferences[KEY_SPATIAL_ENABLED] ?: false,
+            environment = AcousticEnvironment.fromId(preferences[KEY_SPATIAL_ENVIRONMENT] ?: AcousticEnvironment.ORIGINAL.id),
+            wetLevel = preferences[KEY_SPATIAL_WET_LEVEL] ?: 0.30f,
+            ambientSoundscape = AmbientSoundscape.fromId(preferences[KEY_AMBIENT_SOUNDSCAPE] ?: AmbientSoundscape.NONE.id),
+            ambientVolume = preferences[KEY_AMBIENT_VOLUME] ?: 0.08f
+        )
+    }
 
     val countriesGridColumns: Flow<Int> = appContext.dataStore.data.map { preferences ->
         preferences[KEY_COUNTRIES_GRID_COLUMNS] ?: 3
@@ -155,6 +174,16 @@ class UserPreferencesRepository(context: Context) {
     suspend fun setCountriesGridColumns(columns: Int) {
         appContext.dataStore.edit { preferences ->
             preferences[KEY_COUNTRIES_GRID_COLUMNS] = columns
+        }
+    }
+
+    suspend fun setSpatialAudioConfig(config: SpatialAudioConfig) {
+        appContext.dataStore.edit { preferences ->
+            preferences[KEY_SPATIAL_ENABLED] = config.isEnabled
+            preferences[KEY_SPATIAL_ENVIRONMENT] = config.environment.id
+            preferences[KEY_SPATIAL_WET_LEVEL] = config.wetLevel
+            preferences[KEY_AMBIENT_SOUNDSCAPE] = config.ambientSoundscape.id
+            preferences[KEY_AMBIENT_VOLUME] = config.ambientVolume
         }
     }
 }

@@ -29,6 +29,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AvTimer
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Headphones
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -82,6 +83,7 @@ import com.example.localization.localizedName
 import com.example.model.PlaybackStatus
 import com.example.ui.components.LiveStatusBadge
 import com.example.ui.components.SleepTimerDialog
+import com.example.ui.components.SpatialAudioDialog
 import com.example.ui.components.WaveformAnimation
 import com.example.ui.theme.LiveCoral
 import com.example.ui.theme.PureWhite
@@ -97,9 +99,11 @@ fun FullPlayerScreen(
     modifier: Modifier = Modifier
 ) {
     val playerState by viewModel.playerState.collectAsState()
+    val spatialConfig by viewModel.spatialAudioConfig.collectAsState()
     val station = playerState.currentStation
     val context = LocalContext.current
     var isSleepTimerOpen by remember { mutableStateOf(false) }
+    var isSpatialAudioOpen by remember { mutableStateOf(false) }
 
     val isPlaying = playerState.status == PlaybackStatus.PLAYING
     val isConnecting = playerState.status == PlaybackStatus.CONNECTING || playerState.status == PlaybackStatus.BUFFERING
@@ -483,6 +487,44 @@ fun FullPlayerScreen(
                     )
                 }
 
+                // Spatial Audio / Reverb Button
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    IconButton(
+                        onClick = { isSpatialAudioOpen = true },
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (spatialConfig.isEnabled) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+                            )
+                            .border(
+                                BorderStroke(
+                                    1.dp,
+                                    if (spatialConfig.isEnabled) SkyBluePrimary else MaterialTheme.colorScheme.outline
+                                ),
+                                CircleShape
+                            )
+                            .testTag("full_player_spatial_btn")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Headphones,
+                            contentDescription = "الصوت المحيطي",
+                            tint = if (spatialConfig.isEnabled) SkyBluePrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = if (spatialConfig.isEnabled) spatialConfig.environment.titleAr else "الصوت المحيطي",
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = if (spatialConfig.isEnabled) SkyBluePrimary else MaterialTheme.colorScheme.onSurface,
+                            fontWeight = if (spatialConfig.isEnabled) FontWeight.Bold else FontWeight.Medium
+                        )
+                    )
+                }
+
                 // Sleep Timer Button
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     IconButton(
@@ -532,6 +574,16 @@ fun FullPlayerScreen(
         onSelectMinutes = { viewModel.setSleepTimer(it) },
         onCancelTimer = { viewModel.cancelSleepTimer() },
         onDismiss = { isSleepTimerOpen = false }
+    )
+
+    // Spatial Audio & Mosques Simulation Dialog
+    SpatialAudioDialog(
+        isOpen = isSpatialAudioOpen,
+        config = spatialConfig,
+        onConfigChange = { newConfig ->
+            viewModel.setSpatialAudioConfig(newConfig)
+        },
+        onDismiss = { isSpatialAudioOpen = false }
     )
 }
 

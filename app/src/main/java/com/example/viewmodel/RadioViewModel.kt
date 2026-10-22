@@ -11,6 +11,7 @@ import com.example.model.HaramSource
 import com.example.model.PlayerState
 import com.example.model.RadioStation
 import com.example.model.Reciter
+import com.example.model.SpatialAudioConfig
 import com.example.model.StationCategory
 import com.example.model.WeeklyListeningSummary
 import com.example.services.HaramLiveNotificationHelper
@@ -38,6 +39,7 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HaramLivePreferences())
 
     val playerState: StateFlow<PlayerState> = playerManager.playerState
+    val spatialAudioConfig: StateFlow<SpatialAudioConfig> = playerManager.spatialAudioConfig
 
     val weeklyListeningSummary: StateFlow<WeeklyListeningSummary> = listeningStatsRepository.getWeeklyListeningStats()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), WeeklyListeningSummary())
@@ -354,5 +356,9 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
             source = source,
             reciterName = reciterName
         )
+    }
+
+    fun setSpatialAudioConfig(config: SpatialAudioConfig) {
+        playerManager.setSpatialAudioConfig(config)
     }
 }

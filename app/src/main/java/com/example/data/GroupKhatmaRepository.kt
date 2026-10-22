@@ -32,13 +32,12 @@ class GroupKhatmaRepository(context: Context) {
     val khatmasFlow: Flow<List<GroupKhatma>> = appContext.dataStore.data.map { preferences ->
         val jsonString = preferences[KEY_KHATMAS_JSON]
         if (jsonString.isNullOrBlank()) {
-            val initial = getPreSeededKhatmas()
-            initial
+            emptyList()
         } else {
             try {
                 deserializeKhatmas(jsonString)
             } catch (e: Exception) {
-                getPreSeededKhatmas()
+                emptyList()
             }
         }
     }
@@ -136,23 +135,11 @@ class GroupKhatmaRepository(context: Context) {
             val existing = currentList.firstOrNull { it.inviteCode.equals(cleanCode, ignoreCase = true) }
             if (existing != null) {
                 foundKhatma = existing
-                currentList
-            } else {
-                // If not found in local, create a synchronized joined room instance
-                val joined = GroupKhatma(
-                    id = UUID.randomUUID().toString(),
-                    title = "ختمة مشتركة ($cleanCode)",
-                    inviteCode = cleanCode,
-                    creatorName = "الداعي للختمة",
-                    createdAtMillis = System.currentTimeMillis(),
-                    parts = GroupKhatma.defaultKhatmaParts()
-                )
-                foundKhatma = joined
-                listOf(joined) + currentList
             }
+            currentList
         }
 
-        if (trimmedUser.isNotBlank()) {
+        if (trimmedUser.isNotBlank() && foundKhatma != null) {
             saveUserName(trimmedUser)
         }
 
@@ -160,7 +147,7 @@ class GroupKhatmaRepository(context: Context) {
             setLastOpenedKhatmaId(foundKhatma!!.id)
             Result.success(foundKhatma!!)
         } else {
-            Result.failure(IllegalArgumentException("لم يتم العثور على ختمة بهذا الكود"))
+            Result.failure(IllegalArgumentException("لم يتم العثور على ختمة مسجلة بهذا الكود"))
         }
     }
 
@@ -289,12 +276,12 @@ class GroupKhatmaRepository(context: Context) {
         appContext.dataStore.edit { prefs ->
             val currentJson = prefs[KEY_KHATMAS_JSON]
             val currentList = if (currentJson.isNullOrBlank()) {
-                getPreSeededKhatmas()
+                emptyList()
             } else {
                 try {
                     deserializeKhatmas(currentJson)
                 } catch (e: Exception) {
-                    getPreSeededKhatmas()
+                    emptyList()
                 }
             }
             val newList = transform(currentList)
@@ -403,37 +390,5 @@ class GroupKhatmaRepository(context: Context) {
             )
         }
         return list
-    }
-
-    private fun getPreSeededKhatmas(): List<GroupKhatma> {
-        val defaultParts = GroupKhatma.defaultKhatmaParts()
-
-        // Seeded active community khatma
-        val parts1 = defaultParts.map { part ->
-            when (part.juzNumber) {
-                1 -> part.copy(assignedMemberName = "أحمد محمد", isCompleted = true, completionType = KhatmaCompletionType.READING, completionNote = "تقبل الله منا ومنكم")
-                2 -> part.copy(assignedMemberName = "سارة علي", isCompleted = true, completionType = KhatmaCompletionType.READING)
-                3 -> part.copy(assignedMemberName = "عبد الله حسن", isCompleted = true, completionType = KhatmaCompletionType.LISTENING)
-                4 -> part.copy(assignedMemberName = "فاطمة الزهراء", isCompleted = true, completionType = KhatmaCompletionType.READING)
-                5 -> part.copy(assignedMemberName = "محمود عادل", isCompleted = false)
-                6 -> part.copy(assignedMemberName = "عمر فاروق", isCompleted = false)
-                7 -> part.copy(assignedMemberName = "نور الهدى", isCompleted = false)
-                30 -> part.copy(assignedMemberName = "إبراهيم خليل", isCompleted = true, completionType = KhatmaCompletionType.READING)
-                else -> part
-            }
-        }
-
-        val communityKhatma = GroupKhatma(
-            id = "seed_khatma_ramadan",
-            title = "ختمة رواد إذاعات القرآن الكريم",
-            inviteCode = "KH-QURAN",
-            creatorName = "أسرة إذاعات القرآن",
-            createdAtMillis = System.currentTimeMillis() - 86400000L * 2,
-            targetDateMillis = System.currentTimeMillis() + 86400000L * 15,
-            description = "ختمة مباركة جامعة لمستمعي ورواد إذاعات القرآن الكريم حول العالم",
-            parts = parts1
-        )
-
-        return listOf(communityKhatma)
     }
 }

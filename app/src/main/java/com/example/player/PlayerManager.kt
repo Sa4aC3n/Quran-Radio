@@ -34,15 +34,18 @@ import com.example.data.UserPreferencesRepository
 import com.example.model.PlaybackStatus
 import com.example.model.PlayerState
 import com.example.model.RadioStation
+import com.example.model.SpatialAudioConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -54,6 +57,11 @@ class PlayerManager private constructor(
 ) {
     private val appContext = context.applicationContext
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
+    val spatialAcousticProcessor = SpatialAcousticAudioProcessor()
+    val ambientSoundscapePlayer = AmbientSoundscapePlayer()
+    val spatialAudioConfig: StateFlow<SpatialAudioConfig> = userPreferencesRepository.spatialAudioConfig
+        .stateIn(scope, SharingStarted.Eagerly, SpatialAudioConfig())
 
     private val _playerState = MutableStateFlow(PlayerState())
     val playerState: StateFlow<PlayerState> = _playerState.asStateFlow()
@@ -98,6 +106,13 @@ class PlayerManager private constructor(
             }
         } catch (e: Exception) {
             Log.w("PlayerManager", "Failed to register network callback: ${e.message}")
+        }
+
+        scope.launch {
+            spatialAudioConfig.collect { config ->
+                spatialAcousticProcessor.config = config
+                ambientSoundscapePlayer.updateConfig(config.ambientSoundscape, config.ambientVolume)
+            }
         }
     }
 
@@ -193,6 +208,7 @@ class PlayerManager private constructor(
                     return DefaultAudioSink.Builder(context)
                         .setEnableFloatOutput(false)
                         .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
+                        .setAudioProcessors(arrayOf(spatialAcousticProcessor))
                         .build()
                 }
 
@@ -427,6 +443,7 @@ class PlayerManager private constructor(
 
     fun pause() {
         releaseLocks()
+        ambientSoundscapePlayer.onRadioPlaybackStateChanged(false)
         exoPlayer?.pause()
         _playerState.update { it.copy(status = PlaybackStatus.PAUSED, isUserStopped = true) }
     }
@@ -441,10 +458,12 @@ class PlayerManager private constructor(
             exoPlayer?.play()
             _playerState.update { it.copy(status = PlaybackStatus.PLAYING, isUserStopped = false) }
         }
+        ambientSoundscapePlayer.onRadioPlaybackStateChanged(true)
     }
 
     fun stop() {
         releaseLocks()
+        ambientSoundscapePlayer.onRadioPlaybackStateChanged(false)
         retryJob?.cancel()
         durationTrackerJob?.cancel()
         exoPlayer?.stop()
@@ -456,6 +475,12 @@ class PlayerManager private constructor(
                 isAutoRetrying = false,
                 isUserStopped = true
             )
+        }
+    }
+
+    fun setSpatialAudioConfig(config: SpatialAudioConfig) {
+        scope.launch {
+            userPreferencesRepository.setSpatialAudioConfig(config)
         }
     }
 
@@ -717,6 +742,7 @@ class PlayerManager private constructor(
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
+            ambientSoundscapePlayer.onRadioPlaybackStateChanged(isPlaying)
             _playerState.update {
                 it.copy(
                     status = if (isPlaying) PlaybackStatus.PLAYING else {
