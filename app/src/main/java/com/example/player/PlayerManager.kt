@@ -441,24 +441,79 @@ class PlayerManager private constructor(
         }
     }
 
+    private var fadeJob: Job? = null
+
     fun pause() {
+        fadeJob?.cancel()
         releaseLocks()
         ambientSoundscapePlayer.onRadioPlaybackStateChanged(false)
         exoPlayer?.pause()
         _playerState.update { it.copy(status = PlaybackStatus.PAUSED, isUserStopped = true) }
     }
 
+    fun fadeOutAndPause(durationMs: Long = 1200L, onCompleted: (() -> Unit)? = null) {
+        fadeJob?.cancel()
+        val player = exoPlayer
+        if (player == null || !player.isPlaying) {
+            pause()
+            onCompleted?.invoke()
+            return
+        }
+
+        fadeJob = scope.launch(Dispatchers.Main) {
+            val steps = 12
+            val stepTime = (durationMs / steps).coerceAtLeast(20L)
+            val initialVol = player.volume.coerceAtLeast(0.1f)
+
+            for (i in steps downTo 0) {
+                val currentVol = initialVol * (i.toFloat() / steps.toFloat())
+                player.volume = currentVol
+                delay(stepTime)
+            }
+
+            pause()
+            player.volume = 1.0f // Restore volume level for future playbacks
+            onCompleted?.invoke()
+        }
+    }
+
     fun resume() {
+        fadeJob?.cancel()
         val currentStation = _playerState.value.currentStation
         acquireLocks()
         startMediaService()
         if (currentStation != null && (exoPlayer == null || exoPlayer?.playbackState == Player.STATE_IDLE || exoPlayer?.playbackState == Player.STATE_ENDED)) {
             playStation(currentStation)
         } else {
+            exoPlayer?.volume = 1.0f
             exoPlayer?.play()
             _playerState.update { it.copy(status = PlaybackStatus.PLAYING, isUserStopped = false) }
         }
         ambientSoundscapePlayer.onRadioPlaybackStateChanged(true)
+    }
+
+    fun fadeInAndResume(durationMs: Long = 1400L, targetVolume: Float = 1.0f) {
+        fadeJob?.cancel()
+        val player = exoPlayer
+        if (player == null) {
+            resume()
+            return
+        }
+
+        player.volume = 0.0f
+        resume()
+
+        fadeJob = scope.launch(Dispatchers.Main) {
+            val steps = 14
+            val stepTime = (durationMs / steps).coerceAtLeast(20L)
+
+            for (i in 1..steps) {
+                val currentVol = targetVolume * (i.toFloat() / steps.toFloat())
+                player.volume = currentVol
+                delay(stepTime)
+            }
+            player.volume = targetVolume
+        }
     }
 
     fun stop() {

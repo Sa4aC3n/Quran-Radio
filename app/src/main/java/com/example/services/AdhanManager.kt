@@ -138,8 +138,14 @@ class AdhanManager private constructor(context: Context) {
                     stationBeforeAdhan = playerManager.playerState.value.currentStation
 
                     if (wasRadioPlaying) {
-                        Log.i(TAG, "[ADHAN] Pausing radio (Station: ${stationBeforeAdhan?.name ?: "Unknown"})")
-                        playerManager.pause()
+                        val isFadeEnabled = app?.userPreferencesRepository?.isSmartAdhanFadeEnabled?.first() ?: true
+                        if (isFadeEnabled) {
+                            Log.i(TAG, "[ADHAN] Smoothly fading out radio (Station: ${stationBeforeAdhan?.name ?: "Unknown"})")
+                            playerManager.fadeOutAndPause(durationMs = 1200L)
+                        } else {
+                            Log.i(TAG, "[ADHAN] Pausing radio (Station: ${stationBeforeAdhan?.name ?: "Unknown"})")
+                            playerManager.pause()
+                        }
                     } else {
                         Log.i(TAG, "[ADHAN] Radio was not playing before Adhan.")
                     }
@@ -230,8 +236,15 @@ class AdhanManager private constructor(context: Context) {
                 val currentStatus = playerManager.playerState.value.status
                 // Only resume if the radio is still in paused state and wasn't stopped by the user
                 if (currentStatus == PlaybackStatus.PAUSED || currentStatus == PlaybackStatus.IDLE) {
-                    Log.i(TAG, "[ADHAN] Resuming radio automatically (${stationBeforeAdhan?.name})")
-                    playerManager.resume()
+                    val app = appContext as? QuranRadioApplication
+                    val isFadeEnabled = app?.userPreferencesRepository?.isSmartAdhanFadeEnabled?.first() ?: true
+                    if (isFadeEnabled) {
+                        Log.i(TAG, "[ADHAN] Smoothly fading in radio (${stationBeforeAdhan?.name})")
+                        playerManager.fadeInAndResume(durationMs = 1500L)
+                    } else {
+                        Log.i(TAG, "[ADHAN] Resuming radio automatically (${stationBeforeAdhan?.name})")
+                        playerManager.resume()
+                    }
                 } else {
                     Log.d(TAG, "[ADHAN] Radio status is $currentStatus, skipping auto-resume.")
                 }

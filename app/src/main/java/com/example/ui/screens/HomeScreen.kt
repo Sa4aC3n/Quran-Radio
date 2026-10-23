@@ -94,6 +94,7 @@ import com.example.ui.components.HaramLiveSettingsDialog
 import com.example.ui.components.IslamicSeasonSettingsDialog
 import com.example.ui.components.RamadanBanner
 import com.example.ui.components.SleepTimerDialog
+import com.example.ui.components.SmartContextCard
 import com.example.ui.components.StationCard
 import com.example.ui.theme.GoldAccent
 import com.example.ui.theme.LiveCoral
@@ -122,6 +123,7 @@ fun HomeScreen(
     val currentLanguage by viewModel.appLanguage.collectAsState()
     val seasonState = prayerViewModel?.islamicSeasonState?.collectAsState()?.value
     val haramPreferences by viewModel.haramLivePreferences.collectAsState()
+    val smartContextRecommendation by viewModel.smartContextRecommendation.collectAsState()
 
     var isSleepTimerOpen by remember { mutableStateOf(false) }
     var isAdminDialogOpen by remember { mutableStateOf(false) }
@@ -412,6 +414,29 @@ fun HomeScreen(
                             }
                         )
                     }
+                }
+            }
+        }
+
+        // 1.6 Smart Context Recommendation Card (Adapts to Dawn, Day, Friday, Evening, Night)
+        if (searchQuery.isBlank() && selectedCategory == null) {
+            val smartContext = smartContextRecommendation
+            if (smartContext != null && smartContext.currentStation != null) {
+                item {
+                    SmartContextCard(
+                        recommendation = smartContext,
+                        currentPlayingStation = playerState.currentStation,
+                        isPlaying = playerState.status == PlaybackStatus.PLAYING,
+                        onPlayStation = { station ->
+                            viewModel.playStation(station)
+                        },
+                        onTogglePlayPause = {
+                            viewModel.togglePlayPause()
+                        },
+                        onNextRecommendation = {
+                            viewModel.nextSmartContextRecommendation()
+                        }
+                    )
                 }
             }
         }

@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.AvTimer
 import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LightMode
@@ -112,6 +113,7 @@ fun SettingsScreen(
     val isAutoPlay by viewModel.isAutoPlayEnabled.collectAsState()
     val isBackgroundPlay by viewModel.isBackgroundPlayEnabled.collectAsState()
     val isWifiOnly by viewModel.isWifiOnlyEnabled.collectAsState()
+    val isSmartAdhanFade by viewModel.isSmartAdhanFadeEnabled.collectAsState()
     val isNotifications by viewModel.isNotificationsEnabled.collectAsState()
     val notificationFrequency by viewModel.notificationFrequency.collectAsState()
     val notificationTimeWindow by viewModel.notificationTimeWindow.collectAsState()
@@ -417,6 +419,16 @@ fun SettingsScreen(
                         description = appString(StringKey.SETTINGS_WIFI_ONLY_DESC),
                         checked = isWifiOnly,
                         onCheckedChange = { viewModel.setWifiOnly(it) }
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    SettingSwitchRow(
+                        icon = Icons.Default.GraphicEq,
+                        title = "الخفض الذكي للصوت عند رفع الأذان",
+                        description = "خفض صوت الإذاعة تدريجياً وبنعومة عند الأذان ثم استئنافها بعد انتهاء الصلاة",
+                        checked = isSmartAdhanFade,
+                        onCheckedChange = { viewModel.setSmartAdhanFadeEnabled(it) }
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))

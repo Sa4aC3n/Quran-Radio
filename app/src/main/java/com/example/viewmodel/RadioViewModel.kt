@@ -11,9 +11,11 @@ import com.example.model.HaramSource
 import com.example.model.PlayerState
 import com.example.model.RadioStation
 import com.example.model.Reciter
+import com.example.model.SmartContextRecommendation
 import com.example.model.SpatialAudioConfig
 import com.example.model.StationCategory
 import com.example.model.WeeklyListeningSummary
+import com.example.player.SmartContextEngine
 import com.example.services.HaramLiveNotificationHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +26,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class RadioViewModel(application: Application) : AndroidViewModel(application) {
@@ -62,6 +65,9 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
     val isWifiOnlyEnabled: StateFlow<Boolean> = userPreferencesRepository.isWifiOnlyEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    val isSmartAdhanFadeEnabled: StateFlow<Boolean> = userPreferencesRepository.isSmartAdhanFadeEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
     val isNotificationsEnabled: StateFlow<Boolean> = userPreferencesRepository.isNotificationsEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
@@ -99,6 +105,23 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
     val featuredStations: StateFlow<List<RadioStation>> = allStations.combine(favoriteIds) { stations, _ ->
         stations.filter { it.isFeatured }
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Smart Context Recommendations (Adapts to morning, Friday, night, and daily schedule)
+    private val _smartContextIndex = MutableStateFlow(0)
+    val smartContextRecommendation: StateFlow<SmartContextRecommendation?> = combine(
+        allStations,
+        _smartContextIndex
+    ) { stations, index ->
+        if (stations.isEmpty()) null
+        else SmartContextEngine.generateRecommendation(
+            allStations = stations,
+            selectedIndex = index
+        )
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    fun nextSmartContextRecommendation() {
+        _smartContextIndex.update { it + 1 }
+    }
 
     // Search and Filter state
     val searchQuery = MutableStateFlow("")
@@ -360,5 +383,11 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setSpatialAudioConfig(config: SpatialAudioConfig) {
         playerManager.setSpatialAudioConfig(config)
+    }
+
+    fun setSmartAdhanFadeEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.setSmartAdhanFadeEnabled(enabled)
+        }
     }
 }

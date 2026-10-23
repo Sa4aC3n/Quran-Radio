@@ -40,6 +40,11 @@ class UserPreferencesRepository(context: Context) {
     private val KEY_SPATIAL_WET_LEVEL = floatPreferencesKey("spatial_audio_wet_level")
     private val KEY_AMBIENT_SOUNDSCAPE = stringPreferencesKey("spatial_ambient_soundscape")
     private val KEY_AMBIENT_VOLUME = floatPreferencesKey("spatial_ambient_volume")
+    private val KEY_SMART_ADHAN_FADE = booleanPreferencesKey("smart_adhan_fade_enabled")
+
+    val isSmartAdhanFadeEnabled: Flow<Boolean> = appContext.dataStore.data.map { preferences ->
+        preferences[KEY_SMART_ADHAN_FADE] ?: true
+    }
 
     val spatialAudioConfig: Flow<SpatialAudioConfig> = appContext.dataStore.data.map { preferences ->
         SpatialAudioConfig(
@@ -184,6 +189,12 @@ class UserPreferencesRepository(context: Context) {
             preferences[KEY_SPATIAL_WET_LEVEL] = config.wetLevel
             preferences[KEY_AMBIENT_SOUNDSCAPE] = config.ambientSoundscape.id
             preferences[KEY_AMBIENT_VOLUME] = config.ambientVolume
+        }
+    }
+
+    suspend fun setSmartAdhanFadeEnabled(enabled: Boolean) {
+        appContext.dataStore.edit { preferences ->
+            preferences[KEY_SMART_ADHAN_FADE] = enabled
         }
     }
 }
