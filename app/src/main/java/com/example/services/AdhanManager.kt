@@ -6,6 +6,7 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Build
 import android.os.PowerManager
+import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import com.example.QuranRadioApplication
 import com.example.data.PrayerPreferencesRepository
@@ -46,6 +47,8 @@ class AdhanManager private constructor(context: Context) {
 
     private var wakeLock: PowerManager.WakeLock? = null
     private var audioFocusRequest: AudioFocusRequest? = null
+    private val volumeDetector = AdhanVolumeKeyDetector(appContext)
+    private var mediaSession: MediaSessionCompat? = null
 
     private val _adhanState = MutableStateFlow(AdhanPlaybackState.IDLE)
     val adhanState: StateFlow<AdhanPlaybackState> = _adhanState.asStateFlow()
@@ -166,11 +169,39 @@ class AdhanManager private constructor(context: Context) {
                 _adhanState.value = AdhanPlaybackState.PLAYING
                 Log.i(TAG, "[ADHAN] Adhan playing")
 
-                // Display Adhan notification (heads-up with Stop button)
+                // Setup MediaSession for System UI Media Player Notification
+                try {
+                    mediaSession?.release()
+                    mediaSession = MediaSessionCompat(appContext, "AdhanMediaSession").apply {
+                        isActive = true
+                        setCallback(object : MediaSessionCompat.Callback() {
+                            override fun onStop() {
+                                Log.i(TAG, "[ADHAN] MediaSession onStop triggered")
+                                stopAdhan()
+                            }
+                            override fun onPause() {
+                                Log.i(TAG, "[ADHAN] MediaSession onPause triggered")
+                                stopAdhan()
+                            }
+                        })
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "[ADHAN] Failed to create MediaSession: ${e.message}")
+                }
+
+                // Start hardware volume button double-press detector
+                volumeDetector.startListening {
+                    Log.i(TAG, "[ADHAN] Hardware volume key double-press detected! Stopping Adhan.")
+                    stopAdhan()
+                }
+
+                // Display Adhan notification (MediaStyle with artwork and Stop button)
                 AdhanNotificationHelper.showAdhanNotification(
                     context = appContext,
                     prayerType = prayerType,
-                    cityName = currentCity
+                    cityName = currentCity,
+                    muezzinName = selectedSound.titleAr,
+                    sessionToken = mediaSession?.sessionToken
                 )
 
                 // 6. Play Audio
@@ -181,14 +212,13 @@ class AdhanManager private constructor(context: Context) {
                     // Completion Callback
                     Log.i(TAG, "[ADHAN] Adhan completed")
                     _adhanState.value = AdhanPlaybackState.COMPLETED
-                    // Optionally show completed notification or cancel active notification
-                    AdhanNotificationHelper.cancelAdhanNotification(appContext)
+                    cleanupAdhanMedia()
                     finishAdhan(playerManager)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "[ADHAN] Playback error: ${e.message}", e)
                 _adhanState.value = AdhanPlaybackState.FAILED
-                AdhanNotificationHelper.cancelAdhanNotification(appContext)
+                cleanupAdhanMedia()
                 val app = appContext as? QuranRadioApplication
                 finishAdhan(app?.playerManager)
             }
@@ -205,11 +235,31 @@ class AdhanManager private constructor(context: Context) {
         Log.i(TAG, "[ADHAN] Adhan manually stopped by user")
         _adhanState.value = AdhanPlaybackState.STOPPING
 
+        cleanupAdhanMedia()
+
         val app = appContext as? QuranRadioApplication
         val audioPlayer = app?.adhanAudioPlayer ?: AdhanAudioPlayer(appContext)
         audioPlayer.stopAdhan()
 
         finishAdhan(app?.playerManager)
+    }
+
+    /**
+     * Handles physical volume key events forwarded from the foreground activity.
+     */
+    fun handleVolumeKeyEvent(): Boolean {
+        if (!_isAdhanActive.value) return false
+        return volumeDetector.onKeyEvent()
+    }
+
+    private fun cleanupAdhanMedia() {
+        volumeDetector.stopListening()
+        try {
+            mediaSession?.isActive = false
+            mediaSession?.release()
+        } catch (_: Exception) {}
+        mediaSession = null
+        AdhanNotificationHelper.cancelAdhanNotification(appContext)
     }
 
     /**
@@ -224,8 +274,8 @@ class AdhanManager private constructor(context: Context) {
 
     private fun finishAdhan(playerManager: PlayerManager?) {
         scope.launch {
-            // 0. Cancel active Adhan notification if still showing
-            AdhanNotificationHelper.cancelAdhanNotification(appContext)
+            // 0. Clean up media notification, volume listener, and MediaSession
+            cleanupAdhanMedia()
 
             // 1. Release wakeLock and Audio Focus
             releaseWakeLock()

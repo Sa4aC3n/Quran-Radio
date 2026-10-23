@@ -157,4 +157,16 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onKeyDown(keyCode: Int, event: android.view.KeyEvent?): Boolean {
+        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_DOWN || keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) {
+            val app = application as? QuranRadioApplication
+            if (app?.adhanManager?.isAdhanActive?.value == true) {
+                if (app.adhanManager.handleVolumeKeyEvent()) {
+                    return true
+                }
+            }
+        }
+        return super.onKeyDown(keyCode, event)
+    }
 }

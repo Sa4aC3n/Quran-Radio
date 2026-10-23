@@ -7,12 +7,20 @@ import android.app.PendingIntent
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.LinearGradient
+import android.graphics.Paint
+import android.graphics.RectF
+import android.graphics.Shader
 import android.media.AudioAttributes
 import android.net.Uri
 import android.os.Build
+import android.support.v4.media.session.MediaSessionCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import com.example.MainActivity
 import com.example.R
 import com.example.model.PrayerType
@@ -106,12 +114,43 @@ object AdhanNotificationHelper {
     }
 
     /**
-     * Builds the active Adhan notification (heads-up, high priority, with Stop button).
+     * Generates a high-contrast, rounded Islamic artwork tile for the Media Notification largeIcon.
+     */
+    fun getAdhanArtworkBitmap(context: Context, prayerType: PrayerType): Bitmap {
+        val size = 256
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        val gradient = LinearGradient(
+            0f, 0f, size.toFloat(), size.toFloat(),
+            Color.parseColor("#0F2027"),
+            Color.parseColor("#203A43"),
+            Shader.TileMode.CLAMP
+        )
+        paint.shader = gradient
+        val rect = RectF(0f, 0f, size.toFloat(), size.toFloat())
+        canvas.drawRoundRect(rect, 40f, 40f, paint)
+
+        val drawable = ContextCompat.getDrawable(context, R.drawable.ic_adhan_notification)
+        drawable?.let {
+            it.setTint(Color.parseColor("#5BC0EB")) // SkyBluePrimary
+            val padding = 44
+            it.setBounds(padding, padding, size - padding, size - padding)
+            it.draw(canvas)
+        }
+        return bitmap
+    }
+
+    /**
+     * Builds the active Adhan Media-Style notification with artwork and a prominent Stop button.
      */
     fun buildAdhanNotification(
         context: Context,
         prayerType: PrayerType,
-        cityName: String
+        cityName: String,
+        muezzinName: String = "الحرم المكي",
+        sessionToken: MediaSessionCompat.Token? = null
     ): Notification {
         createNotificationChannels(context)
 
@@ -139,19 +178,27 @@ object AdhanNotificationHelper {
         )
 
         val prayerName = prayerType.arabicName
-        val title = "حان الآن موعد أذان $prayerName 🕌"
-        val text = "الله أكبر الله أكبر — التوقيت المحلي لمدينة $cityName وما جاورها"
-        val bigText = "الله أكبر الله أكبر — حان الآن موعد أذان $prayerName حسب التوقيت المحلي لمدينة $cityName وما جاورها.\nاضغط أدناه لإيقاف صوت الأذان فوراً."
+        val title = "أذان $prayerName 🕌"
+        val subtitle = "الله أكبر الله أكبر :: $muezzinName"
+
+        val mediaStyle = androidx.media.app.NotificationCompat.MediaStyle()
+            .setShowActionsInCompactView(0) // Show action 0 (Stop button) right beside in compact view!
+            .setShowCancelButton(true)
+            .setCancelButtonIntent(stopPendingIntent)
+
+        if (sessionToken != null) {
+            mediaStyle.setMediaSession(sessionToken)
+        }
+
+        val artworkBitmap = getAdhanArtworkBitmap(context, prayerType)
 
         return NotificationCompat.Builder(context, CHANNEL_ADHAN_ID)
             .setSmallIcon(R.drawable.ic_adhan_notification)
+            .setLargeIcon(artworkBitmap)
             .setContentTitle(title)
-            .setContentText(text)
-            .setStyle(
-                NotificationCompat.BigTextStyle()
-                    .setBigContentTitle(title)
-                    .bigText(bigText)
-            )
+            .setContentText(subtitle)
+            .setSubText(cityName)
+            .setStyle(mediaStyle)
             .setColor(0xFF0284C7.toInt()) // SkyBlue Primary theme
             .setColorized(true)
             .setPriority(NotificationCompat.PRIORITY_MAX)
@@ -163,13 +210,8 @@ object AdhanNotificationHelper {
             .setDeleteIntent(stopPendingIntent)
             .addAction(
                 android.R.drawable.ic_media_pause,
-                "إيقاف صوت الأذان ⏹️",
+                "إيقاف الأذان ⏹️",
                 stopPendingIntent
-            )
-            .addAction(
-                android.R.drawable.ic_menu_view,
-                "فتح التطبيق 🕌",
-                mainPendingIntent
             )
             .build()
     }
@@ -225,10 +267,12 @@ object AdhanNotificationHelper {
     fun showAdhanNotification(
         context: Context,
         prayerType: PrayerType,
-        cityName: String
+        cityName: String,
+        muezzinName: String = "الحرم المكي",
+        sessionToken: MediaSessionCompat.Token? = null
     ) {
         createNotificationChannels(context)
-        val notification = buildAdhanNotification(context, prayerType, cityName)
+        val notification = buildAdhanNotification(context, prayerType, cityName, muezzinName, sessionToken)
         try {
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.notify(NOTIFICATION_ADHAN_ID, notification)
