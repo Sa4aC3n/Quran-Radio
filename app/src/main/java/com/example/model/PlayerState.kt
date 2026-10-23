@@ -20,5 +20,7 @@ data class PlayerState(
     val isUserStopped: Boolean = false,
     val sleepTimerRemainingSeconds: Long = 0L,
     val isSleepTimerActive: Boolean = false,
-    val playbackDurationMs: Long = 0L
+    val playbackDurationMs: Long = 0L,
+    val isUsingBackupStream: Boolean = false,
+    val streamCandidateInfo: String? = null
 )

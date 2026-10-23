@@ -240,6 +240,22 @@ fun FullPlayerScreen(
                     status = playerState.status,
                     isAutoRetrying = playerState.isAutoRetrying
                 )
+                if (playerState.isUsingBackupStream) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.tertiaryContainer,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f))
+                    ) {
+                        Text(
+                            text = "بث احتياطي",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            ),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                }
                 if (isPlaying) {
                     WaveformAnimation(
                         isPlaying = true,

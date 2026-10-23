@@ -173,8 +173,8 @@ class PlayerManager private constructor(
         try {
             val httpDataSourceFactory = DefaultHttpDataSource.Factory()
                 .setUserAgent("Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36 QuranRadioWorld/1.0")
-                .setConnectTimeoutMs(20000)
-                .setReadTimeoutMs(25000)
+                .setConnectTimeoutMs(8000)
+                .setReadTimeoutMs(10000)
                 .setAllowCrossProtocolRedirects(true)
                 .setKeepPostFor302Redirects(true)
                 .setDefaultRequestProperties(
@@ -284,28 +284,10 @@ class PlayerManager private constructor(
     private var currentActiveUrl: String? = null
     private var streamCandidates: List<String> = emptyList()
     private var currentCandidateIndex: Int = 0
+    private val failoverEngine = MultiStreamFailoverEngine()
 
     fun playStation(station: RadioStation) {
-        val candidates = mutableListOf<String>()
-        if (station.streams.isNotEmpty()) {
-            val sortedStreams = station.streams
-                .filter { it.isActive }
-                .sortedBy { it.priority }
-            for (s in sortedStreams) {
-                if (s.url.isNotBlank() && !candidates.contains(s.url)) {
-                    candidates.add(s.url)
-                }
-            }
-        }
-        if (station.streamUrl.isNotBlank() && !candidates.contains(station.streamUrl)) {
-            candidates.add(0, station.streamUrl)
-        }
-        if (!station.fallbackStreamUrl.isNullOrBlank() && !candidates.contains(station.fallbackStreamUrl)) {
-            candidates.add(station.fallbackStreamUrl)
-        }
-        if (candidates.isEmpty()) {
-            candidates.add(station.streamUrl)
-        }
+        val candidates = failoverEngine.resolveCandidates(station)
 
         streamCandidates = candidates
         currentCandidateIndex = 0
@@ -327,6 +309,11 @@ class PlayerManager private constructor(
         retryJob?.cancel()
         currentActiveUrl = streamUrl
 
+        val isBackup = currentCandidateIndex > 0
+        val candidateInfo = if (streamCandidates.size > 1) {
+            "سيرفر ${currentCandidateIndex + 1} من ${streamCandidates.size}"
+        } else null
+
         _playerState.update {
             it.copy(
                 currentStation = station,
@@ -334,7 +321,9 @@ class PlayerManager private constructor(
                 errorMessage = null,
                 retryCount = retryCount,
                 isAutoRetrying = isAutoRetry,
-                isUserStopped = false
+                isUserStopped = false,
+                isUsingBackupStream = isBackup,
+                streamCandidateInfo = candidateInfo
             )
         }
 
@@ -646,7 +635,9 @@ class PlayerManager private constructor(
         val station = _playerState.value.currentStation
 
         if (station != null) {
-            Log.w("PlayerManager", "[FAILOVER] Stream failed for '${station.name}': $currentActiveUrl ($message)")
+            val failedUrl = currentActiveUrl ?: station.streamUrl
+            failoverEngine.recordFailure(failedUrl)
+            Log.w("PlayerManager", "[FAILOVER] Stream failed for '${station.name}': $failedUrl ($message)")
 
             // 1. If there is another candidate stream for this station, switch to it immediately
             if (currentCandidateIndex < streamCandidates.size - 1) {
@@ -657,12 +648,13 @@ class PlayerManager private constructor(
                 _playerState.update {
                     it.copy(
                         status = PlaybackStatus.CONNECTING,
-                        errorMessage = "جارٍ التبديل للرابط الاحتياطي لضمان استمرارية البث..."
+                        isUsingBackupStream = true,
+                        errorMessage = "انقطع السيرفر الرئيسي، جارٍ التحويل للبث البديل فورياً (${currentCandidateIndex + 1}/${streamCandidates.size})..."
                     )
                 }
                 retryJob?.cancel()
                 retryJob = scope.launch {
-                    delay(300)
+                    delay(150)
                     if (_playerState.value.currentStation?.id == station.id) {
                         playStationInternal(station, nextStreamUrl, retryCount = 0, isAutoRetry = true)
                     }
@@ -774,6 +766,7 @@ class PlayerManager private constructor(
                 }
                 Player.STATE_READY -> {
                     val isPlaying = exoPlayer?.playWhenReady == true
+                    currentActiveUrl?.let { failoverEngine.recordSuccess(it) }
                     _playerState.update {
                         it.copy(
                             status = if (isPlaying) PlaybackStatus.PLAYING else PlaybackStatus.PAUSED,
