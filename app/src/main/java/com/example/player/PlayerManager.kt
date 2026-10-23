@@ -34,6 +34,7 @@ import com.example.data.UserPreferencesRepository
 import com.example.model.PlaybackStatus
 import com.example.model.PlayerState
 import com.example.model.RadioStation
+import com.example.model.RecognizedRecitation
 import com.example.model.SpatialAudioConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -286,6 +287,8 @@ class PlayerManager private constructor(
     private var streamCandidates: List<String> = emptyList()
     private var currentCandidateIndex: Int = 0
     private val failoverEngine = MultiStreamFailoverEngine()
+    private val recognitionEngine = AcousticQuranRecognitionEngine()
+    val currentRecitation: StateFlow<RecognizedRecitation> = recognitionEngine.recitationState
 
     fun playStation(station: RadioStation) {
         val candidates = failoverEngine.resolveCandidates(station)
@@ -310,6 +313,7 @@ class PlayerManager private constructor(
         retryJob?.cancel()
         currentActiveUrl = streamUrl
         rollingBufferProcessor.clearBuffer()
+        recognitionEngine.onStationChanged(station)
 
         val isBackup = currentCandidateIndex > 0
         val candidateInfo = if (streamCandidates.size > 1) {
@@ -802,6 +806,12 @@ class PlayerManager private constructor(
             }
         }
 
+        override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+            val title = mediaMetadata.title?.toString() ?: mediaMetadata.displayTitle?.toString()
+            val artist = mediaMetadata.artist?.toString()
+            recognitionEngine.onMetadataReceived(title, artist, _playerState.value.currentStation)
+        }
+
         override fun onPlayerError(error: PlaybackException) {
             Log.e("PlayerManager", "onPlayerError: errorCode=${error.errorCode}, errorCodeName=${error.errorCodeName}, message=${error.message}", error)
             retryJob?.cancel()
@@ -834,6 +844,14 @@ class PlayerManager private constructor(
             outputFile = file
         )
         return if (success) file else null
+    }
+
+    fun refreshRecognition() {
+        recognitionEngine.recognizeCurrentStream()
+    }
+
+    fun navigateRecitationAyah(ayahNumber: Int) {
+        recognitionEngine.selectAyah(ayahNumber)
     }
 
     companion object {

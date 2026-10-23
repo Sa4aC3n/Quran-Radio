@@ -11,6 +11,7 @@ import com.example.model.HaramSource
 import com.example.model.PlayerState
 import com.example.model.RadioStation
 import com.example.model.Reciter
+import com.example.model.RecognizedRecitation
 import com.example.model.SmartContextRecommendation
 import com.example.model.SpatialAudioConfig
 import com.example.model.StationCategory
@@ -43,6 +44,7 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
 
     val playerState: StateFlow<PlayerState> = playerManager.playerState
     val spatialAudioConfig: StateFlow<SpatialAudioConfig> = playerManager.spatialAudioConfig
+    val currentRecitation: StateFlow<RecognizedRecitation> = playerManager.currentRecitation
 
     val weeklyListeningSummary: StateFlow<WeeklyListeningSummary> = listeningStatsRepository.getWeeklyListeningStats()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), WeeklyListeningSummary())
@@ -397,5 +399,13 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
 
     fun exportRecitationClip(seconds: Int, context: android.content.Context): java.io.File? {
         return playerManager.exportRecitationClip(seconds, context)
+    }
+
+    fun refreshRecitationRecognition() {
+        playerManager.refreshRecognition()
+    }
+
+    fun navigateRecitationAyah(ayahNumber: Int) {
+        playerManager.navigateRecitationAyah(ayahNumber)
     }
 }

@@ -82,6 +82,7 @@ import com.example.localization.StringKey
 import com.example.localization.appString
 import com.example.localization.localizedName
 import com.example.model.PlaybackStatus
+import com.example.ui.components.AcousticRecitationCard
 import com.example.ui.components.ClipAndShareDialog
 import com.example.ui.components.LiveStatusBadge
 import com.example.ui.components.SleepTimerDialog
@@ -102,6 +103,7 @@ fun FullPlayerScreen(
 ) {
     val playerState by viewModel.playerState.collectAsState()
     val spatialConfig by viewModel.spatialAudioConfig.collectAsState()
+    val recitation by viewModel.currentRecitation.collectAsState()
     val station = playerState.currentStation
     val context = LocalContext.current
     var isSleepTimerOpen by remember { mutableStateOf(false) }
@@ -374,6 +376,16 @@ fun FullPlayerScreen(
                         }
                     }
                 }
+            }
+
+            // Acoustic Quran Stream Recognition Card (Surah, Ayah, Uthmani Script & Tafsir Al-Muyassar)
+            if (recitation.isRecognized || isPlaying || isConnecting) {
+                Spacer(modifier = Modifier.height(18.dp))
+                AcousticRecitationCard(
+                    recitation = recitation,
+                    onNavigateAyah = { ayah -> viewModel.navigateRecitationAyah(ayah) },
+                    onRefreshRecognition = { viewModel.refreshRecitationRecognition() }
+                )
             }
 
             Spacer(modifier = Modifier.height(28.dp))
