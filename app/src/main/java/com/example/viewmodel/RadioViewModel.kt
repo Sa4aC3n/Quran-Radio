@@ -390,4 +390,12 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
             userPreferencesRepository.setSmartAdhanFadeEnabled(enabled)
         }
     }
+
+    fun getRecordedClipSeconds(): Float {
+        return playerManager.getRecordedClipSeconds()
+    }
+
+    fun exportRecitationClip(seconds: Int, context: android.content.Context): java.io.File? {
+        return playerManager.exportRecitationClip(seconds, context)
+    }
 }

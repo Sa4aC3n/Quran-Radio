@@ -28,6 +28,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AvTimer
+import androidx.compose.material.icons.filled.ContentCut
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Headphones
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -81,6 +82,7 @@ import com.example.localization.StringKey
 import com.example.localization.appString
 import com.example.localization.localizedName
 import com.example.model.PlaybackStatus
+import com.example.ui.components.ClipAndShareDialog
 import com.example.ui.components.LiveStatusBadge
 import com.example.ui.components.SleepTimerDialog
 import com.example.ui.components.SpatialAudioDialog
@@ -104,6 +106,7 @@ fun FullPlayerScreen(
     val context = LocalContext.current
     var isSleepTimerOpen by remember { mutableStateOf(false) }
     var isSpatialAudioOpen by remember { mutableStateOf(false) }
+    var isClipDialogOpen by remember { mutableStateOf(false) }
 
     val isPlaying = playerState.status == PlaybackStatus.PLAYING
     val isConnecting = playerState.status == PlaybackStatus.CONNECTING || playerState.status == PlaybackStatus.BUFFERING
@@ -503,6 +506,34 @@ fun FullPlayerScreen(
                     )
                 }
 
+                // Clip & Share Recitation Button
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    IconButton(
+                        onClick = { isClipDialogOpen = true },
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surface)
+                            .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline), CircleShape)
+                            .testTag("full_player_clip_btn")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ContentCut,
+                            contentDescription = "قص المقطع",
+                            tint = SkyBluePrimary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "قص المقطع",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Medium
+                        )
+                    )
+                }
+
                 // Spatial Audio / Reverb Button
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     IconButton(
@@ -600,6 +631,17 @@ fun FullPlayerScreen(
             viewModel.setSpatialAudioConfig(newConfig)
         },
         onDismiss = { isSpatialAudioOpen = false }
+    )
+
+    // Clip & Share Recitation Dialog
+    ClipAndShareDialog(
+        isOpen = isClipDialogOpen,
+        station = station,
+        recordedSeconds = viewModel.getRecordedClipSeconds(),
+        onExportClip = { seconds ->
+            viewModel.exportRecitationClip(seconds, context)
+        },
+        onDismiss = { isClipDialogOpen = false }
     )
 }
 

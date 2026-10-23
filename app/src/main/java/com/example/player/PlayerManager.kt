@@ -60,6 +60,7 @@ class PlayerManager private constructor(
 
     val spatialAcousticProcessor = SpatialAcousticAudioProcessor()
     val ambientSoundscapePlayer = AmbientSoundscapePlayer()
+    val rollingBufferProcessor = RollingAudioBufferProcessor()
     val spatialAudioConfig: StateFlow<SpatialAudioConfig> = userPreferencesRepository.spatialAudioConfig
         .stateIn(scope, SharingStarted.Eagerly, SpatialAudioConfig())
 
@@ -208,7 +209,7 @@ class PlayerManager private constructor(
                     return DefaultAudioSink.Builder(context)
                         .setEnableFloatOutput(false)
                         .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
-                        .setAudioProcessors(arrayOf(spatialAcousticProcessor))
+                        .setAudioProcessors(arrayOf(spatialAcousticProcessor, rollingBufferProcessor))
                         .build()
                 }
 
@@ -308,6 +309,7 @@ class PlayerManager private constructor(
         }
         retryJob?.cancel()
         currentActiveUrl = streamUrl
+        rollingBufferProcessor.clearBuffer()
 
         val isBackup = currentCandidateIndex > 0
         val candidateInfo = if (streamCandidates.size > 1) {
@@ -813,6 +815,25 @@ class PlayerManager private constructor(
             }
             handlePlaybackError(userFriendlyMessage)
         }
+    }
+
+    fun getRecordedClipSeconds(): Float {
+        return rollingBufferProcessor.getRecordedSeconds()
+    }
+
+    fun exportRecitationClip(seconds: Int, context: Context): java.io.File? {
+        val pcm = rollingBufferProcessor.extractLastSeconds(seconds)
+        if (pcm.isEmpty()) return null
+        val station = _playerState.value.currentStation
+        val stationName = station?.name ?: "Quran_Radio"
+        val file = AudioClipExporter.createClipFile(context, stationName, seconds)
+        val success = AudioClipExporter.exportToWav(
+            pcmData = pcm,
+            sampleRate = rollingBufferProcessor.currentSampleRate,
+            channelCount = rollingBufferProcessor.currentChannelCount,
+            outputFile = file
+        )
+        return if (success) file else null
     }
 
     companion object {
