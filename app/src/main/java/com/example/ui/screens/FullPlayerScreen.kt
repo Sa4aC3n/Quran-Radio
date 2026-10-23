@@ -76,6 +76,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.localization.AppLanguage
 import com.example.localization.LocalAppLanguage
 import com.example.localization.StationTranslator
 import com.example.localization.StringKey
@@ -106,6 +107,7 @@ fun FullPlayerScreen(
     val recitation by viewModel.currentRecitation.collectAsState()
     val station = playerState.currentStation
     val context = LocalContext.current
+    val currentLang = LocalAppLanguage.current
     var isSleepTimerOpen by remember { mutableStateOf(false) }
     var isSpatialAudioOpen by remember { mutableStateOf(false) }
     var isClipDialogOpen by remember { mutableStateOf(false) }
@@ -154,15 +156,19 @@ fun FullPlayerScreen(
                     IconButton(
                         onClick = {
                             if (station != null) {
+                                val localizedStationName = station.localizedName(currentLang)
+                                val playStoreUrl = "https://play.google.com/store/apps/details?id=com.aistudio.quranradioworld.live"
+                                val shareMessage = if (currentLang == AppLanguage.AR) {
+                                    "استمع الآن إلى $localizedStationName عبر تطبيق راديو القرآن الكريم 📻❤️\nحمل التطبيق مجاناً من متجر جوجل بلاي:\n$playStoreUrl"
+                                } else {
+                                    "Listen now to $localizedStationName on Quran Radio World 📻❤️\nDownload the app free from Google Play:\n$playStoreUrl"
+                                }
                                 val sendIntent: Intent = Intent().apply {
                                     action = Intent.ACTION_SEND
-                                    putExtra(
-                                        Intent.EXTRA_TEXT,
-                                        "${station.name}\n${station.streamUrl}"
-                                    )
+                                    putExtra(Intent.EXTRA_TEXT, shareMessage)
                                     type = "text/plain"
                                 }
-                                val shareIntent = Intent.createChooser(sendIntent, "Share Station")
+                                val shareIntent = Intent.createChooser(sendIntent, localizedStationName)
                                 context.startActivity(shareIntent)
                             }
                         }
@@ -274,7 +280,6 @@ fun FullPlayerScreen(
             Spacer(modifier = Modifier.height(14.dp))
 
             // Station Title & Details
-            val currentLang = LocalAppLanguage.current
             val localizedStationName = station?.localizedName(currentLang) ?: appString(StringKey.APP_NAME)
             val localizedSubtitle = if (station?.reciter != null) {
                 StationTranslator.getReciterName(station.reciterId, station.reciter, "", currentLang)

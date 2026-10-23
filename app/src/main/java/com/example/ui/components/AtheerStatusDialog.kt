@@ -81,11 +81,11 @@ fun AtheerStatusDialog(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        text = "محطات إذاعات أثير راديو",
+                        text = "شبكة إذاعات القرآن الكريم المباشرة",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                     )
                     Text(
-                        text = "Atheer Radio Library • Multi-Stream Failover",
+                        text = "Live Stream Engine • Multi-Stream Failover",
                         style = MaterialTheme.typography.bodySmall.copy(
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -102,7 +102,7 @@ fun AtheerStatusDialog(
                     .padding(vertical = 4.dp)
             ) {
                 Text(
-                    text = "تم دمج مكتبة إذاعات أثير (atheer-radio.com) مع قاعدة بيانات التطبيق بنظام التبديل التلقائي للروابط الاحتياطية Smart Failover لضمان استمرارية البث على مدار الساعة.",
+                    text = "تعمل إذاعات التطبيق بنظام التبديل التلقائي الذكي للروابط الاحتياطية (Smart Failover) لضمان استمرارية البث الحي على مدار الساعة بدون انقطاع.",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 13.sp,
@@ -161,7 +161,7 @@ fun AtheerStatusDialog(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "المصدر: https://www.atheer-radio.com/library\nالبثوث مشغلة مباشرة من سيرفرات الصوت المعتمدة.",
+                            text = "البثوث مشغلة مباشرة من سيرفرات الصوت المعتمدة الرسمية بجودة نقية ومستقرة.",
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -186,7 +186,7 @@ fun AtheerStatusDialog(
                         strokeWidth = 2.dp
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("جارٍ المزامنة...", color = PureWhite)
+                    Text("جارٍ التحقق...", color = PureWhite)
                 } else {
                     Icon(
                         imageVector = Icons.Default.Refresh,
@@ -195,7 +195,7 @@ fun AtheerStatusDialog(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("مزامنة من أثير الآن", color = PureWhite)
+                    Text("فحص وتحديث الروابط الآن", color = PureWhite)
                 }
             }
         },

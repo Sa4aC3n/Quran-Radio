@@ -166,11 +166,11 @@ class AtheerRadioImporter(
                                         streamUrl = primaryUrl,
                                         fallbackStreamUrl = backupUrl,
                                         streams = streamList,
-                                        sourceName = "Atheer Radio",
-                                        sourceWebsite = "https://www.atheer-radio.com/library",
-                                        sourceUrl = "https://www.atheer-radio.com/library/$catId",
+                                        sourceName = "Quran Radio Network",
+                                        sourceWebsite = "",
+                                        sourceUrl = "",
                                         logoUrl = "https://www.atheer-radio.com/assets/imgs/cat$catId.png",
-                                        description = "بث مباشر لـ $name عبر شبكة إذاعات أثير راديو.",
+                                        description = "بث مباشر عالي الجودة لإذاعة $name.",
                                         isVerified = true,
                                         streamStatus = "ONLINE",
                                         priority = 50
@@ -303,8 +303,8 @@ class AtheerRadioImporter(
                 resultList.add(
                     atheer.copy(
                         streams = preparedStreams,
-                        sourceName = "Atheer Radio",
-                        sourceWebsite = "https://www.atheer-radio.com/library"
+                        sourceName = "Quran Radio Network",
+                        sourceWebsite = ""
                     )
                 )
                 Log.d(TAG, "[ATHEER_IMPORT] Station Found & Added: ${atheer.name}")
@@ -422,11 +422,17 @@ class AtheerRadioImporter(
                 streamUrl = streamUrl,
                 fallbackStreamUrl = fallbackStreamUrl,
                 streams = streams,
-                sourceName = obj.optString("sourceName", "Atheer Radio"),
-                sourceWebsite = obj.optString("sourceWebsite", "https://www.atheer-radio.com/library"),
-                sourceUrl = obj.optString("sourceUrl", ""),
+                sourceName = "Quran Radio Network",
+                sourceWebsite = "",
+                sourceUrl = "",
                 logoUrl = obj.optString("logoUrl", ""),
-                description = obj.optString("description", ""),
+                description = obj.optString("description", "").let { desc ->
+                    if (desc.contains("أثير") || desc.contains("Atheer")) {
+                        "بث مباشر عالي الجودة لإذاعة $name."
+                    } else {
+                        desc
+                    }
+                },
                 isVerified = obj.optBoolean("isVerified", true),
                 streamStatus = obj.optString("streamStatus", "ONLINE"),
                 bitrate = obj.optString("bitrate", "128 kbps"),
