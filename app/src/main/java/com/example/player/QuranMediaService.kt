@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.annotation.OptIn
@@ -13,34 +14,40 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.media3.common.C
 import androidx.media3.common.ForwardingPlayer
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.DefaultMediaNotificationProvider
+import androidx.media3.session.LibraryResult
+import androidx.media3.session.MediaLibraryService
+import androidx.media3.session.MediaLibraryService.MediaLibrarySession
 import androidx.media3.session.MediaSession
-import androidx.media3.session.MediaSessionService
 import androidx.media3.session.MediaStyleNotificationHelper
 import com.example.MainActivity
 import com.example.QuranRadioApplication
 import com.example.R
+import com.example.model.RadioStation
+import com.example.model.StationCategory
+import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
- * Android Media3 MediaSessionService for Quran Radio World.
- * 
- * Provides full integration with Android System Media Controls (Quick Settings,
- * Notification Shade, Lock Screen, Bluetooth headsets, and Car audio).
+ * Android Media3 MediaLibraryService for Quran Radio World.
+ *
+ * Provides full integration with Android System Media Controls and Android Auto
+ * with a structured browse hierarchy for in-car dashboard radio exploration.
  */
 @OptIn(UnstableApi::class)
-class QuranMediaService : MediaSessionService() {
+class QuranMediaService : MediaLibraryService() {
 
-    private var mediaSession: MediaSession? = null
+    private var mediaLibrarySession: MediaLibrarySession? = null
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var isBackgroundPlayEnabledCached: Boolean = true
 
@@ -58,10 +65,6 @@ class QuranMediaService : MediaSessionService() {
         val player = playerManager?.getPlayer()
 
         if (player != null && playerManager != null) {
-            // ForwardingPlayer ensures that Play, Pause, Stop, Next, and Previous actions
-            // triggered by the Android System Media Player Control Card (Quick Settings,
-            // Lock Screen, Bluetooth headsets, WearOS, and Android Auto) are routed
-            // correctly to PlayerManager with appropriate lock, retry, and state management.
             val forwardingPlayer = object : ForwardingPlayer(player) {
                 override fun getAvailableCommands(): Player.Commands {
                     return super.getAvailableCommands().buildUpon()
@@ -71,6 +74,7 @@ class QuranMediaService : MediaSessionService() {
                         .add(Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
                         .add(Player.COMMAND_SEEK_TO_PREVIOUS)
                         .add(Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
+                        .add(Player.COMMAND_SET_MEDIA_ITEM)
                         .build()
                 }
 
@@ -81,7 +85,8 @@ class QuranMediaService : MediaSessionService() {
                         Player.COMMAND_SEEK_TO_NEXT,
                         Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM,
                         Player.COMMAND_SEEK_TO_PREVIOUS,
-                        Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM -> true
+                        Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM,
+                        Player.COMMAND_SET_MEDIA_ITEM -> true
                         else -> super.isCommandAvailable(command)
                     }
                 }
@@ -113,9 +118,27 @@ class QuranMediaService : MediaSessionService() {
                 override fun seekToPreviousMediaItem() {
                     playerManager.playPrevious()
                 }
+
+                override fun setMediaItem(mediaItem: MediaItem) {
+                    val stationId = mediaItem.mediaId
+                    val station = app?.radioRepository?.getStationById(stationId)
+                        ?: com.example.data.DefaultStationsData.STATIONS.find { it.id == stationId }
+                    if (station != null) {
+                        playerManager.playStation(station)
+                    } else {
+                        super.setMediaItem(mediaItem)
+                    }
+                }
+
+                override fun setMediaItem(mediaItem: MediaItem, startPositionMs: Long) {
+                    setMediaItem(mediaItem)
+                }
+
+                override fun setMediaItem(mediaItem: MediaItem, resetPosition: Boolean) {
+                    setMediaItem(mediaItem)
+                }
             }
 
-            // Clicking the Media Card opens MainActivity to the currently playing station
             val sessionActivityPendingIntent = PendingIntent.getActivity(
                 this,
                 0,
@@ -125,23 +148,66 @@ class QuranMediaService : MediaSessionService() {
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
 
-            val sessionCallback = object : MediaSession.Callback {
+            val libraryCallback = object : MediaLibrarySession.Callback {
                 override fun onConnect(
                     session: MediaSession,
                     controller: MediaSession.ControllerInfo
                 ): MediaSession.ConnectionResult {
-                    val sessionCommands = MediaSession.ConnectionResult.DEFAULT_SESSION_COMMANDS.buildUpon().build()
+                    val sessionCommands = MediaLibrarySession.ConnectionResult.DEFAULT_SESSION_COMMANDS.buildUpon().build()
                     val playerCommands = session.player.availableCommands.buildUpon()
                         .add(Player.COMMAND_PLAY_PAUSE)
                         .add(Player.COMMAND_STOP)
                         .add(Player.COMMAND_SEEK_TO_NEXT)
                         .add(Player.COMMAND_SEEK_TO_PREVIOUS)
+                        .add(Player.COMMAND_SET_MEDIA_ITEM)
                         .build()
 
-                    return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
+                    return MediaLibrarySession.ConnectionResult.AcceptedResultBuilder(session)
                         .setAvailableSessionCommands(sessionCommands)
                         .setAvailablePlayerCommands(playerCommands)
                         .build()
+                }
+
+                override fun onGetLibraryRoot(
+                    session: MediaLibrarySession,
+                    browser: MediaSession.ControllerInfo,
+                    params: LibraryParams?
+                ): ListenableFuture<LibraryResult<MediaItem>> {
+                    val rootMetadata = MediaMetadata.Builder()
+                        .setTitle("إذاعات القرآن الكريم")
+                        .setIsBrowsable(true)
+                        .setIsPlayable(false)
+                        .build()
+                    val rootItem = MediaItem.Builder()
+                        .setMediaId(ROOT_ID)
+                        .setMediaMetadata(rootMetadata)
+                        .build()
+                    return Futures.immediateFuture(LibraryResult.ofItem(rootItem, params))
+                }
+
+                override fun onGetChildren(
+                    session: MediaLibrarySession,
+                    browser: MediaSession.ControllerInfo,
+                    parentId: String,
+                    page: Int,
+                    pageSize: Int,
+                    params: LibraryParams?
+                ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
+                    val children = getBrowseChildren(parentId, app)
+                    return Futures.immediateFuture(LibraryResult.ofItemList(children, params))
+                }
+
+                override fun onGetItem(
+                    session: MediaLibrarySession,
+                    browser: MediaSession.ControllerInfo,
+                    mediaId: String
+                ): ListenableFuture<LibraryResult<MediaItem>> {
+                    val item = getMediaItemById(mediaId, app)
+                    return if (item != null) {
+                        Futures.immediateFuture(LibraryResult.ofItem(item, null))
+                    } else {
+                        Futures.immediateFuture(LibraryResult.ofError(LibraryResult.RESULT_ERROR_BAD_VALUE))
+                    }
                 }
 
                 override fun onPlaybackResumption(
@@ -163,13 +229,12 @@ class QuranMediaService : MediaSessionService() {
                 }
             }
 
-            mediaSession = MediaSession.Builder(this, forwardingPlayer)
+            mediaLibrarySession = MediaLibrarySession.Builder(this, forwardingPlayer, libraryCallback)
                 .setSessionActivity(sessionActivityPendingIntent)
-                .setCallback(sessionCallback)
-                .setId("QuranRadioMediaSession")
+                .setId("QuranRadioMediaLibrarySession")
                 .build()
 
-            playerManager.mediaSession = mediaSession
+            playerManager.mediaSession = mediaLibrarySession
 
             // Configure Notification Provider with clear Channel and App Branding
             val notificationProvider = DefaultMediaNotificationProvider.Builder(this)
@@ -183,12 +248,12 @@ class QuranMediaService : MediaSessionService() {
             setMediaNotificationProvider(notificationProvider)
 
             // Immediately promote to foreground with genuine MediaStyle notification
-            onUpdateNotification(mediaSession!!, true)
+            onUpdateNotification(mediaLibrarySession!!, true)
 
             // Observe player state changes to keep Media Player Control Card perfectly in sync
             serviceScope.launch {
                 playerManager.playerState.collect {
-                    mediaSession?.let { session ->
+                    mediaLibrarySession?.let { session ->
                         onUpdateNotification(session, false)
                     }
                 }
@@ -196,6 +261,85 @@ class QuranMediaService : MediaSessionService() {
         } else {
             promoteToForegroundFallback()
         }
+    }
+
+    private fun getBrowseChildren(parentId: String, app: QuranRadioApplication?): ImmutableList<MediaItem> {
+        val list = mutableListOf<MediaItem>()
+
+        when (parentId) {
+            ROOT_ID -> {
+                list.add(createCategoryItem(CAT_FEATURED, "🌟 إذاعات مميزة مختارة"))
+                list.add(createCategoryItem(CAT_HARAMAIN, "🕋 تلاوات الحرمين الشريفين"))
+                list.add(createCategoryItem(CAT_CAIRO, "🇪🇬 إذاعة القرآن من القاهرة"))
+                list.add(createCategoryItem(CAT_RECITERS, "🎙️ كبار مشاهير القراء"))
+                list.add(createCategoryItem(CAT_ALL, "📻 جميع إذاعات القرآن الكريم"))
+            }
+            CAT_FEATURED -> {
+                val featured = com.example.data.DefaultStationsData.STATIONS.filter { it.isFeatured }
+                featured.forEach { list.add(stationToMediaItem(it)) }
+            }
+            CAT_HARAMAIN -> {
+                val haramain = com.example.data.DefaultStationsData.STATIONS.filter {
+                    it.id == "haram_makkah_live" || it.id == "haram_madinah_live"
+                }
+                haramain.forEach { list.add(stationToMediaItem(it)) }
+            }
+            CAT_CAIRO -> {
+                val cairo = com.example.data.DefaultStationsData.STATIONS.filter {
+                    it.id == "cairo_quran" || it.countryCode == "EG"
+                }
+                cairo.forEach { list.add(stationToMediaItem(it)) }
+            }
+            CAT_RECITERS -> {
+                val reciters = com.example.data.DefaultStationsData.STATIONS.filter {
+                    it.category == StationCategory.RECITER || it.reciter != null
+                }.take(30)
+                reciters.forEach { list.add(stationToMediaItem(it)) }
+            }
+            CAT_ALL -> {
+                com.example.data.DefaultStationsData.STATIONS.take(50).forEach {
+                    list.add(stationToMediaItem(it))
+                }
+            }
+        }
+        return ImmutableList.copyOf(list)
+    }
+
+    private fun createCategoryItem(id: String, title: String): MediaItem {
+        return MediaItem.Builder()
+            .setMediaId(id)
+            .setMediaMetadata(
+                MediaMetadata.Builder()
+                    .setTitle(title)
+                    .setIsBrowsable(true)
+                    .setIsPlayable(false)
+                    .build()
+            )
+            .build()
+    }
+
+    private fun stationToMediaItem(station: RadioStation): MediaItem {
+        val artworkUri = if (station.logoUrl.isNotBlank()) Uri.parse(station.logoUrl) else null
+        return MediaItem.Builder()
+            .setMediaId(station.id)
+            .setUri(Uri.parse(station.streamUrl))
+            .setMediaMetadata(
+                MediaMetadata.Builder()
+                    .setTitle(station.name)
+                    .setArtist(station.reciter ?: station.country)
+                    .setSubtitle(station.reciter ?: station.country)
+                    .setArtworkUri(artworkUri)
+                    .setIsPlayable(true)
+                    .setIsBrowsable(false)
+                    .build()
+            )
+            .build()
+    }
+
+    private fun getMediaItemById(mediaId: String, app: QuranRadioApplication?): MediaItem? {
+        val station = app?.radioRepository?.getStationById(mediaId)
+            ?: com.example.data.DefaultStationsData.STATIONS.find { it.id == mediaId }
+        return station?.let { stationToMediaItem(it) }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -220,7 +364,7 @@ class QuranMediaService : MediaSessionService() {
             }
         }
 
-        mediaSession?.let { session ->
+        mediaLibrarySession?.let { session ->
             val player = session.player
             val isPlaying = player.playWhenReady && player.playbackState != Player.STATE_ENDED && player.playbackState != Player.STATE_IDLE
             onUpdateNotification(session, isPlaying)
@@ -390,15 +534,15 @@ class QuranMediaService : MediaSessionService() {
         }
     }
 
-    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
-        return mediaSession
+    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession? {
+        return mediaLibrarySession
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
         val app = application as? QuranRadioApplication
         val isBgEnabled = isBackgroundPlayEnabledCached
-        val player = mediaSession?.player
+        val player = mediaLibrarySession?.player
         val isPlaying = player != null && player.playWhenReady && player.playbackState != Player.STATE_ENDED && player.playbackState != Player.STATE_IDLE
 
         if (!isBgEnabled || !isPlaying) {
@@ -421,9 +565,9 @@ class QuranMediaService : MediaSessionService() {
         } catch (_: Exception) {}
         val app = application as? QuranRadioApplication
         app?.playerManager?.mediaSession = null
-        mediaSession?.run {
+        mediaLibrarySession?.run {
             release()
-            mediaSession = null
+            mediaLibrarySession = null
         }
         super.onDestroy()
     }
@@ -438,5 +582,12 @@ class QuranMediaService : MediaSessionService() {
         const val ACTION_NEXT = "com.example.player.ACTION_NEXT"
         const val ACTION_PREVIOUS = "com.example.player.ACTION_PREVIOUS"
         const val ACTION_STOP = "com.example.player.ACTION_STOP"
+
+        const val ROOT_ID = "[ROOT]"
+        const val CAT_FEATURED = "[CAT_FEATURED]"
+        const val CAT_HARAMAIN = "[CAT_HARAMAIN]"
+        const val CAT_CAIRO = "[CAT_CAIRO]"
+        const val CAT_RECITERS = "[CAT_RECITERS]"
+        const val CAT_ALL = "[CAT_ALL]"
     }
 }
