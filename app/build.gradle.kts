@@ -35,13 +35,13 @@ android {
     }
 
     create("release") {
-      val customKeystorePath = System.getenv("KEYSTORE_PATH")
+      val customKeystorePath = System.getenv("KEYSTORE_PATH") ?: rootDir.resolve("local.properties").takeIf { it.exists() }?.let { f -> java.util.Properties().apply { f.inputStream().use { load(it) } }.getProperty("KEYSTORE_PATH") }
       val customKeystore = customKeystorePath?.let { file(it) } ?: file("${rootDir}/my-upload-key.jks")
       if (customKeystore.exists()) {
         storeFile = customKeystore
-        storePassword = System.getenv("STORE_PASSWORD")
-        keyAlias = "upload"
-        keyPassword = System.getenv("KEY_PASSWORD")
+        storePassword = System.getenv("STORE_PASSWORD") ?: rootDir.resolve("local.properties").takeIf { it.exists() }?.let { f -> java.util.Properties().apply { f.inputStream().use { load(it) } }.getProperty("STORE_PASSWORD") }
+        keyAlias = System.getenv("KEY_ALIAS") ?: rootDir.resolve("local.properties").takeIf { it.exists() }?.let { f -> java.util.Properties().apply { f.inputStream().use { load(it) } }.getProperty("KEY_ALIAS") } ?: "upload"
+        keyPassword = System.getenv("KEY_PASSWORD") ?: rootDir.resolve("local.properties").takeIf { it.exists() }?.let { f -> java.util.Properties().apply { f.inputStream().use { load(it) } }.getProperty("KEY_PASSWORD") }
       } else {
         storeFile = debugKeystore
         storePassword = "android"

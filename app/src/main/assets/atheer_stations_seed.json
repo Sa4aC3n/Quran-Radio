@@ -9528,13 +9528,13 @@
     "categoryTitle": "ØªØ±Ø¬Ù…Ø© Ù…Ø¹Ø§Ù†ÙŠ Ø§Ù„Ù‚Ø±Ø¢Ù† Ø§Ù„ÙƒØ±ÙŠÙ…",
     "reciter": null,
     "reciterId": null,
-    "streamUrl": "http://qurango.net/radio/mokhtasr-english",
-    "fallbackStreamUrl": "http://backup.qurango.net/radio/mokhtasr-english",
+    "streamUrl": "https://qurango.net/radio/mokhtasr-english",
+    "fallbackStreamUrl": "https://backup.qurango.net/radio/mokhtasr-english",
     "streams": [
       {
         "id": "atheer_109079_primary",
         "stationId": "atheer_109079",
-        "url": "http://qurango.net/radio/mokhtasr-english",
+        "url": "https://qurango.net/radio/mokhtasr-english",
         "format": "MP3",
         "priority": 1,
         "isPrimary": true,
@@ -9546,7 +9546,7 @@
       {
         "id": "atheer_109079_backup",
         "stationId": "atheer_109079",
-        "url": "http://backup.qurango.net/radio/mokhtasr-english",
+        "url": "https://backup.qurango.net/radio/mokhtasr-english",
         "format": "MP3",
         "priority": 2,
         "isPrimary": false,

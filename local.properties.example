@@ -1,5 +1,5 @@
 ## Local SDK Configuration Example
-# Copy this file to 'local.properties' and adjust the sdk.dir path for your operating system.
+# Copy this file to 'local.properties' and adjust the paths/values for your local environment.
 #
 # Windows:
 # sdk.dir=C\:\\Users\\YourUsername\\AppData\\Local\\Android\\Sdk
@@ -9,3 +9,9 @@
 #
 # Linux:
 # sdk.dir=/home/YourUsername/Android/Sdk
+
+## Optional Release Signing Credentials (NEVER commit local.properties to git!)
+# KEYSTORE_PATH=C\:\\path\\to\\your-release-key.jks
+# STORE_PASSWORD=your_store_password
+# KEY_ALIAS=your_key_alias
+# KEY_PASSWORD=your_key_password
