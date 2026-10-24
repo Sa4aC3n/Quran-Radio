@@ -25,8 +25,22 @@ class AdhanAlarmReceiver : BroadcastReceiver() {
 
             Log.i("AdhanAlarmReceiver", "[ADHAN] Received prayer alarm for: ${prayerType.arabicName} in $cityName")
 
-            // Play Adhan directly through AdhanManager (pauses radio, no notifications)
-            AdhanManager.getInstance(context).playAdhan(prayerType, isTest = false)
+            // Start AdhanPlaybackService as ForegroundService to ensure continuous playback in Doze mode
+            val serviceIntent = Intent(context, AdhanPlaybackService::class.java).apply {
+                action = AdhanPlaybackService.ACTION_START_ADHAN
+                putExtra("PRAYER_TYPE_ID", prayerTypeId)
+                putExtra("CITY_NAME", cityName)
+            }
+            try {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    androidx.core.content.ContextCompat.startForegroundService(context, serviceIntent)
+                } else {
+                    context.startService(serviceIntent)
+                }
+            } catch (e: Exception) {
+                Log.e("AdhanAlarmReceiver", "Failed to start AdhanPlaybackService, direct fallback: ${e.message}")
+                AdhanManager.getInstance(context).playAdhan(prayerType, isTest = false)
+            }
 
             // Reschedule rolling alarms in background
             AdhanAlarmScheduler.scheduleUpcomingAlarms(context)

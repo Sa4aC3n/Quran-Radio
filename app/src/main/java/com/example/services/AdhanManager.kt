@@ -260,6 +260,12 @@ class AdhanManager private constructor(context: Context) {
         } catch (_: Exception) {}
         mediaSession = null
         AdhanNotificationHelper.cancelAdhanNotification(appContext)
+        try {
+            val stopIntent = android.content.Intent(appContext, AdhanPlaybackService::class.java).apply {
+                action = AdhanPlaybackService.ACTION_STOP_ADHAN
+            }
+            appContext.startService(stopIntent)
+        } catch (_: Exception) {}
     }
 
     /**
