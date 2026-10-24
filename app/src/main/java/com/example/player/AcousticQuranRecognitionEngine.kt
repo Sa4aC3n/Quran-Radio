@@ -77,15 +77,32 @@ class AcousticQuranRecognitionEngine(
 
             val reciter = detectReciter(rawTitle, station)
             val detectedSurah = detectSurah(rawTitle, station)
-            val detectedAyah = detectAyah(rawTitle, detectedSurah.versesCount)
 
-            fetchAyahInternal(
-                reciterName = reciter,
-                surah = detectedSurah,
-                ayahNumber = detectedAyah,
-                source = source,
-                rawTitle = rawTitle
-            )
+            if (detectedSurah != null) {
+                val detectedAyah = detectAyah(rawTitle, detectedSurah.versesCount)
+                fetchAyahInternal(
+                    reciterName = reciter,
+                    surah = detectedSurah,
+                    ayahNumber = detectedAyah,
+                    source = source,
+                    rawTitle = rawTitle
+                )
+            } else {
+                _recitationState.value = RecognizedRecitation(
+                    reciterName = reciter,
+                    surahNumber = 17,
+                    surahNameAr = station?.name ?: "تلاوة قرآنية مباركة",
+                    surahNameEn = "Quran Radio Live",
+                    currentAyahNumber = 9,
+                    totalAyahs = 111,
+                    uthmaniText = "﴿ إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ وَيُبَشِّرُ الْمُؤْمِنِينَ ﴾",
+                    tafsirText = "بث مباشر لإذاعة القرآن الكريم. استمع وتدبر في آيات الذكر الحكيم من خلال البث العطر.",
+                    isRecognized = false,
+                    isLoading = false,
+                    source = source,
+                    streamRawTitle = rawTitle
+                )
+            }
         }
     }
 
@@ -131,7 +148,7 @@ class AcousticQuranRecognitionEngine(
         return station?.name?.takeIf { it.isNotBlank() } ?: "قارئ معتمد"
     }
 
-    private fun detectSurah(rawTitle: String?, station: RadioStation?): QuranSurahItem {
+    private fun detectSurah(rawTitle: String?, station: RadioStation?): QuranSurahItem? {
         val textToSearch = listOfNotNull(rawTitle, station?.name, station?.nameAr).joinToString(" ")
         val normalizedSearch = normalizeArabic(textToSearch)
 
@@ -160,8 +177,8 @@ class AcousticQuranRecognitionEngine(
             }
         }
 
-        // Default to Al-Fatihah
-        return QuranSurahsData.SURAHS[0]
+        // If no explicit Surah match, return null to avoid false identification
+        return null
     }
 
     private fun detectAyah(rawTitle: String?, totalAyahs: Int): Int {
