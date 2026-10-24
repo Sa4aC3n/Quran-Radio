@@ -153,7 +153,7 @@ class QuranMediaService : MediaLibraryService() {
                     session: MediaSession,
                     controller: MediaSession.ControllerInfo
                 ): MediaSession.ConnectionResult {
-                    val sessionCommands = MediaLibrarySession.ConnectionResult.DEFAULT_SESSION_COMMANDS.buildUpon().build()
+                    val sessionCommands = MediaSession.ConnectionResult.DEFAULT_SESSION_COMMANDS.buildUpon().build()
                     val playerCommands = session.player.availableCommands.buildUpon()
                         .add(Player.COMMAND_PLAY_PAUSE)
                         .add(Player.COMMAND_STOP)
@@ -162,7 +162,7 @@ class QuranMediaService : MediaLibraryService() {
                         .add(Player.COMMAND_SET_MEDIA_ITEM)
                         .build()
 
-                    return MediaLibrarySession.ConnectionResult.AcceptedResultBuilder(session)
+                    return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
                         .setAvailableSessionCommands(sessionCommands)
                         .setAvailablePlayerCommands(playerCommands)
                         .build()

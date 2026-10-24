@@ -27,7 +27,7 @@ class AdhanAlarmReceiver : BroadcastReceiver() {
 
             // Start AdhanPlaybackService as ForegroundService to ensure continuous playback in Doze mode
             val serviceIntent = Intent(context, AdhanPlaybackService::class.java).apply {
-                action = AdhanPlaybackService.ACTION_START_ADHAN
+                this.action = AdhanPlaybackService.ACTION_START_ADHAN
                 putExtra("PRAYER_TYPE_ID", prayerTypeId)
                 putExtra("CITY_NAME", cityName)
             }
