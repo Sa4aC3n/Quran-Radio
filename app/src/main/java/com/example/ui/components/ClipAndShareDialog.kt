@@ -2,7 +2,10 @@ package com.example.ui.components
 
 import android.content.Context
 import android.content.Intent
+import android.content.ContentValues
+import android.os.Build
 import android.os.Environment
+import android.provider.MediaStore
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -320,17 +323,42 @@ private fun shareAudioFile(context: Context, file: File, stationTitle: String) {
 
 private fun saveClipToMusicFolder(context: Context, sourceFile: File): File? {
     return try {
-        val targetDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-            ?: context.getExternalFilesDir(Environment.DIRECTORY_MUSIC)
-            ?: context.filesDir
-        val targetFile = File(targetDir, sourceFile.name)
-        FileInputStream(sourceFile).use { input ->
-            FileOutputStream(targetFile).use { output ->
-                input.copyTo(output)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val resolver = context.contentResolver
+            val contentValues = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, sourceFile.name)
+                put(MediaStore.MediaColumns.MIME_TYPE, "audio/wav")
+                put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/QuranRadio")
+                put(MediaStore.MediaColumns.IS_PENDING, 1)
             }
+            val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+            if (uri != null) {
+                resolver.openOutputStream(uri)?.use { output ->
+                    FileInputStream(sourceFile).use { input ->
+                        input.copyTo(output)
+                    }
+                }
+                contentValues.clear()
+                contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
+                resolver.update(uri, contentValues, null, null)
+                File(sourceFile.name)
+            } else {
+                null
+            }
+        } else {
+            val targetDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                ?: context.getExternalFilesDir(Environment.DIRECTORY_MUSIC)
+                ?: context.filesDir
+            val targetFile = File(targetDir, sourceFile.name)
+            FileInputStream(sourceFile).use { input ->
+                FileOutputStream(targetFile).use { output ->
+                    input.copyTo(output)
+                }
+            }
+            if (targetFile.exists() && targetFile.length() > 0) targetFile else null
         }
-        if (targetFile.exists() && targetFile.length() > 0) targetFile else null
-    } catch (_: Exception) {
+    } catch (e: Exception) {
+        android.util.Log.e("ClipAndShareDialog", "Failed to save clip: ${e.message}", e)
         null
     }
 }
