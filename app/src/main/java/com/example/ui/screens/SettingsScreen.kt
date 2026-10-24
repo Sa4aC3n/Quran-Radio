@@ -36,6 +36,15 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.foundation.border
+import androidx.compose.material.icons.filled.Gavel
+import androidx.compose.material.icons.filled.PrivacyTip
+import androidx.compose.material.icons.filled.Shop
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.graphics.Brush
+import com.example.ui.theme.SkyBlueDark
+
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.Wifi
@@ -139,6 +148,8 @@ fun SettingsScreen(
 
     val appUpdateManager = remember { AppUpdateManagerFactory.create(context) }
     var appUpdateState by remember { mutableStateOf<AppUpdateUiState>(AppUpdateUiState.Idle) }
+    var activeLegalDialogTitle by remember { mutableStateOf<String?>(null) }
+    var activeLegalDialogContent by remember { mutableStateOf<String?>(null) }
 
     DisposableEffect(appUpdateManager) {
         val listener = InstallStateUpdatedListener { state ->
@@ -1321,7 +1332,321 @@ fun SettingsScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 3. Our Apps on Google Play (تطبيقاتنا على متجر جوجل)
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(22.dp))
+                    .clickable { openDeveloperPage(context) }
+                    .testTag("settings_dev_apps_card"),
+                shape = RoundedCornerShape(22.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(RoundedCornerShape(13.dp))
+                            .background(SkyBluePrimary.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Shop,
+                            contentDescription = "تطبيقاتنا على متجر جوجل",
+                            tint = SkyBluePrimary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "تطبيقاتنا على متجر جوجل",
+                            style = MaterialTheme.typography.titleSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 15.sp
+                            )
+                        )
+                        Spacer(modifier = Modifier.height(3.dp))
+                        Text(
+                            text = "استكشف المزيد من تطبيقاتنا الإسلامية والنافعة",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 12.sp
+                            )
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.Default.ChevronLeft,
+                        contentDescription = null,
+                        tint = NavyMuted.copy(alpha = 0.7f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
+
+            // 4. Share & Rate Card (انشر تؤجر • شارك تطبيق القرآن الكريم)
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("settings_contact_share_card"),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.35f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    SkyBlueDark,
+                                    SkyBluePrimary,
+                                    Color(0xFF004D40)
+                                )
+                            )
+                        )
+                        .padding(horizontal = 16.dp, vertical = 20.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "انشر تؤجر • شارك تطبيق القرآن الكريم",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                fontSize = 16.sp
+                            ),
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Text(
+                            text = "قال ﷺ: «مَن دلَّ على خيرٍ فله مثلُ أجرِ فاعله»",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontWeight = FontWeight.Medium,
+                                color = Color.White.copy(alpha = 0.95f),
+                                fontSize = 13.sp
+                            ),
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(modifier = Modifier.height(18.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Share Button
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(50.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(Color.Black.copy(alpha = 0.22f))
+                                    .border(
+                                        border = BorderStroke(1.2.dp, Color.White.copy(alpha = 0.65f)),
+                                        shape = RoundedCornerShape(16.dp)
+                                    )
+                                    .clickable { shareAppFromSettings(context) }
+                                    .testTag("btn_settings_share_app"),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Share,
+                                        contentDescription = null,
+                                        tint = Color(0xFFFFD54F),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "مشاركة التطبيق",
+                                        style = MaterialTheme.typography.labelLarge.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White,
+                                            fontSize = 14.sp
+                                        )
+                                    )
+                                }
+                            }
+
+                            // Rate Button
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(50.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(Color.Black.copy(alpha = 0.22f))
+                                    .border(
+                                        border = BorderStroke(1.2.dp, Color.White.copy(alpha = 0.65f)),
+                                        shape = RoundedCornerShape(16.dp)
+                                    )
+                                    .clickable { openPlayStoreFromSettings(context) }
+                                    .testTag("btn_settings_rate_app"),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Star,
+                                        contentDescription = null,
+                                        tint = Color(0xFFFFD54F),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "تقييم التطبيق",
+                                        style = MaterialTheme.typography.labelLarge.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White,
+                                            fontSize = 14.sp
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // 5. Section: Legal Info (المعلومات القانونية والخصوصية)
+            Text(
+                text = "المعلومات القانونية والخصوصية",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = SkyBluePrimary
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 6.dp)
+            )
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("settings_legal_card"),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    // Privacy Policy
+                    SettingsLegalRowItem(
+                        icon = Icons.Default.PrivacyTip,
+                        title = "سياسة الخصوصية",
+                        subtitle = "تطبيقنا لا يجمع أي بيانات شخصية خاصة بك",
+                        onClick = {
+                            activeLegalDialogTitle = "سياسة الخصوصية"
+                            activeLegalDialogContent = PRIVACY_POLICY_TEXT
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f), thickness = 0.5.dp)
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Terms of Service
+                    SettingsLegalRowItem(
+                        icon = Icons.Default.Gavel,
+                        title = "شروط الاستخدام",
+                        subtitle = "تطبيق مجاني غير تجاري لوجه الله تعالى",
+                        onClick = {
+                            activeLegalDialogTitle = "شروط الاستخدام"
+                            activeLegalDialogContent = TERMS_OF_SERVICE_TEXT
+                        }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // 6. Elegant Footer
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp)
+                    .testTag("settings_footer"),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Quran Radio World",
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 14.sp
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(2.dp))
+
+                Text(
+                    text = "إذاعات القرآن الكريم",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = SkyBluePrimary,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 12.sp
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = "صنع بكل حـــــ❤️ـــــب في مصر",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 12.sp
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    text = "Quran Radio World 2026 ©",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                        fontSize = 11.sp
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(2.dp))
+
+                Text(
+                    text = "جميع الحقوق محفوظة لكل المسلمين",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        fontSize = 11.sp
+                    )
+                )
+            }
+
+            Spacer(modifier = Modifier.height(90.dp))
         }
     }
 
@@ -1473,6 +1798,51 @@ fun SettingsScreen(
         onSetTimeWindow = { viewModel.setNotificationTimeWindow(it) },
         onDismiss = { isNotificationSettingsDialogOpen = false }
     )
+
+    // Legal Info / Privacy Policy Dialog
+    if (activeLegalDialogTitle != null && activeLegalDialogContent != null) {
+        AlertDialog(
+            onDismissRequest = {
+                activeLegalDialogTitle = null
+                activeLegalDialogContent = null
+            },
+            title = {
+                Text(
+                    text = activeLegalDialogTitle ?: "",
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleLarge
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text(
+                        text = activeLegalDialogContent ?: "",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            lineHeight = 22.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        activeLegalDialogTitle = null
+                        activeLegalDialogContent = null
+                    }
+                ) {
+                    Text("حسناً", fontWeight = FontWeight.Bold, color = SkyBluePrimary)
+                }
+            },
+            shape = RoundedCornerShape(20.dp),
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    }
 }
 
 @Composable
@@ -1611,3 +1981,110 @@ private fun openPlayStoreFromSettings(context: Context) {
     }
 }
 
+
+
+@Composable
+private fun SettingsLegalRowItem(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .clickable { onClick() }
+            .padding(vertical = 8.dp, horizontal = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(42.dp)
+                .clip(RoundedCornerShape(13.dp))
+                .background(SkyBluePrimary.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = SkyBluePrimary,
+                modifier = Modifier.size(22.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.width(14.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 12.sp
+                )
+            )
+        }
+
+        Icon(
+            imageVector = Icons.Default.ChevronLeft,
+            contentDescription = null,
+            tint = NavyMuted.copy(alpha = 0.7f),
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
+private fun openDeveloperPage(context: Context) {
+    val devUrl = "https://play.google.com/store/apps/dev?id=6839550047456072292"
+    try {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(devUrl)).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        context.startActivity(intent)
+    } catch (_: Exception) {}
+}
+
+private const val PRIVACY_POLICY_TEXT = """نحن في تطبيق «إذاعات القرآن الكريم» (Quran Radio World) نولي خصوصيتك أهمية قصوى ونلتزم بحمايتها بالكامل:
+
+١. عدم جمع البيانات الشخصية:
+التطبيق لا يقوم بجمع أو تخزين أو مشاركة أي بيانات شخصية أو معلومات تعريفية خاصة بالمستخدم إطلاقاً.
+
+٢. التخزين المحلي (Local Storage):
+تفضيلاتك الشخصية مثل (المحطات المفضلة، سجل الختمات القرآنية، إعدادات الأذان، مؤقت النوم، واللغة) يتم حفظها محلياً فقط على جهازك باستخدام تقنية التخزين الآمن، ولا يتم رفعها إلى أي خوادم خارجية.
+
+٣. الأذونات المستخدمة والغرض منها:
+• الاتصال بالإنترنت: يُستخدم فقط للاتصال بسيرفرات البث الصوتي المباشر لإذاعات القرآن الكريم.
+• خدمة التشغيل في الخلفية (Foreground Service): لضمان استمرار الاستماع للقرآن الكريم والأذان بوضوح دون انقطاع عند قفل الشاشة أو استخدام تطبيقات أخرى.
+• إذن المنبه الدقيق (Exact Alarm): لجدولة وتنبيهك بمواقيت الصلاة والأذان في موعدها المضبوط.
+• إشعار التحكم بالصوت: لعرض بطاقة التحكم في الصوت (تشغيل / إيقاف / المحطة التالية) في ستارة الإشعارات وشاشة القفل وشاشات السيارات.
+
+٤. أمان الاتصال:
+يتم تشغيل كافة محطات البث عبر بروتوكولات آمنة ومشفرة لضمان استقرار البث وحمايتك.
+
+٥. خلو التطبيق من الإعلانات:
+التطبيق وقف خيري مجاني لوجه الله تعالى وخالٍ تماماً من أي إعلانات تجارية أو أدوات تتبع."""
+
+private const val TERMS_OF_SERVICE_TEXT = """مرحباً بكم في تطبيق «إذاعات القرآن الكريم» (Quran Radio World). باستخدامك للتطبيق فإنك توافق على الشروط التالية:
+
+١. الغرض من التطبيق:
+التطبيق مشروع وقفي وخيري يهدف إلى نشر كتاب الله تعالى وتيسير الاستماع لتلاوات القرآن الكريم من مختلف إذاعات العالم الإسلامي على مدار الساعة مجاناً وبدون أي مقابل مادي.
+
+٢. الاستخدام الشخصي وغير التجاري:
+يُتاح التطبيق للاستخدام الشخصي المجاني لوجه الله تعالى، ولا يجوز إعادة بيعه أو استغلاله تجارياً بأي شكل من الأشكال.
+
+٣. حقوق البث والمحتوى القرآني:
+جميع التلاوات والبرامج الإذاعية المبثة تعود ملكيتها الفكرية وحقوق بثها إلى هيئات وإذاعات القرآن الكريم الرسمية المعنية ووزارات الأوقاف والشؤون الإسلامية في بلدانها. دور التطبيق يقتصر على ربط وتسهيل الوصول للبثوث المباشرة العامة المتاحة للمسلمين.
+
+٤. التحديثات والتطوير:
+نعمل باستمرار على تحسين جودة البث وإضافة إذاعات جديدة وتحديث الروابط الاحتياطية تلقائياً لضمان تجربة استماع نقية ومستقرة.
+
+٥. الدعاء والمشاركة:
+نسألكم صالح الدعاء لكل من ساهم في تطوير ونشر هذا التطبيق، ويسعدنا دائماً استقبال مقترحاتكم لخدمة كتاب الله عز وجل."""

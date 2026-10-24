@@ -325,255 +325,50 @@ fun AboutScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Section: Share & Rate App Card (انشر تؤجر • شارك تطبيق القرآن الكريم)
+                    // Section: Developer Contact
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .testTag("about_contact_share_card"),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.35f)),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(
-                                    brush = Brush.linearGradient(
-                                        colors = listOf(
-                                            SkyBlueDark,
-                                            SkyBluePrimary,
-                                            Color(0xFF004D40)
-                                        )
-                                    )
-                                )
-                                .padding(horizontal = 16.dp, vertical = 20.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                // 1. Title: انشر تؤجر • شارك تطبيق القرآن الكريم
-                                Text(
-                                    text = "انشر تؤجر • شارك تطبيق القرآن الكريم",
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White,
-                                        fontSize = 16.sp
-                                    ),
-                                    textAlign = TextAlign.Center
-                                )
-
-                                Spacer(modifier = Modifier.height(6.dp))
-
-                                // 2. Hadith: قال ﷺ: «مَن دلَّ على خيرٍ فله مثلُ أجرِ فاعله»
-                                Text(
-                                    text = "قال ﷺ: «مَن دلَّ على خيرٍ فله مثلُ أجرِ فاعله»",
-                                    style = MaterialTheme.typography.bodySmall.copy(
-                                        fontWeight = FontWeight.Medium,
-                                        color = Color.White.copy(alpha = 0.95f),
-                                        fontSize = 13.sp
-                                    ),
-                                    textAlign = TextAlign.Center
-                                )
-
-                                Spacer(modifier = Modifier.height(18.dp))
-
-                                // 3. Two Buttons side by side
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    // 1. Share App (مشاركة التطبيق)
-                                    Box(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(50.dp)
-                                            .clip(RoundedCornerShape(16.dp))
-                                            .background(Color.Black.copy(alpha = 0.22f))
-                                            .border(
-                                                border = BorderStroke(1.2.dp, Color.White.copy(alpha = 0.65f)),
-                                                shape = RoundedCornerShape(16.dp)
-                                            )
-                                            .clickable { shareApp(context = context) }
-                                            .testTag("btn_share_app"),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.padding(horizontal = 8.dp),
-                                            horizontalArrangement = Arrangement.Center,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Share,
-                                                contentDescription = null,
-                                                tint = Color(0xFFFFD54F), // لمسة ذهبية مشرقة
-                                                modifier = Modifier.size(20.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            Text(
-                                                text = appString(StringKey.ABOUT_SHARE_APP),
-                                                style = MaterialTheme.typography.labelLarge.copy(
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = Color.White,
-                                                    fontSize = 14.sp
-                                                )
-                                            )
-                                        }
-                                    }
-
-                                    // 2. Rate App (تقييم التطبيق)
-                                    Box(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(50.dp)
-                                            .clip(RoundedCornerShape(16.dp))
-                                            .background(Color.Black.copy(alpha = 0.22f))
-                                            .border(
-                                                border = BorderStroke(1.2.dp, Color.White.copy(alpha = 0.65f)),
-                                                shape = RoundedCornerShape(16.dp)
-                                            )
-                                            .clickable { openPlayStore(context = context) }
-                                            .testTag("btn_rate_app"),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.padding(horizontal = 8.dp),
-                                            horizontalArrangement = Arrangement.Center,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Star,
-                                                contentDescription = null,
-                                                tint = Color(0xFFFFD54F), // نجمة ذهبية مشرقة
-                                                modifier = Modifier.size(20.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            Text(
-                                                text = appString(StringKey.ABOUT_RATE_APP),
-                                                style = MaterialTheme.typography.labelLarge.copy(
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = Color.White,
-                                                    fontSize = 14.sp
-                                                )
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Section: Legal Information
-                    Text(
-                        text = appString(StringKey.ABOUT_LEGAL_SECTION),
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = SkyBluePrimary
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 4.dp, vertical = 6.dp)
-                    )
-
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("about_legal_card"),
+                            .padding(top = 16.dp),
                         shape = RoundedCornerShape(24.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
                     ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
-                            ActionRowItem(
-                                icon = Icons.Default.PrivacyTip,
-                                title = appString(StringKey.ABOUT_PRIVACY_POLICY),
-                                subtitle = appString(StringKey.ABOUT_PRIVACY_POLICY_SUBTITLE),
-                                testTag = "btn_privacy_policy",
-                                onClick = {
-                                    activeDialogTitle = "Privacy Policy"
-                                    activeDialogContent = "Quran Radio World respects your privacy.\n\n• No personal data or location is tracked or stored.\n• All preferences (favorites, timer, language) are stored locally on your device.\n• Internet connection is used exclusively to stream live broadcast feeds."
+                        Column(modifier = Modifier.padding(18.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(MaterialTheme.colorScheme.primaryContainer),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Email,
+                                        contentDescription = null,
+                                        tint = SkyBluePrimary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
                                 }
-                            )
-
-                            Spacer(modifier = Modifier.height(10.dp))
-
-                            ActionRowItem(
-                                icon = Icons.Default.Gavel,
-                                title = appString(StringKey.ABOUT_TERMS_OF_SERVICE),
-                                subtitle = appString(StringKey.ABOUT_TERMS_OF_SERVICE_SUBTITLE),
-                                testTag = "btn_terms_of_service",
-                                onClick = {
-                                    activeDialogTitle = "Terms of Service"
-                                    activeDialogContent = "Quran Radio World is provided free of charge for listening to live Holy Quran radio stations worldwide.\n\n• All recitation copyrights belong to their respective broadcasting entities.\n• The application is completely free to use."
-                                }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(
+                                    text = "تواصل مع فريق التطوير",
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "نسعد دائماً بمقترحاتكم واستفساراتكم لتطوير التطبيق وخدمة كتاب الله.",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 12.5.sp
+                                )
                             )
                         }
-                    }
-
-                    Spacer(modifier = Modifier.height(28.dp))
-
-                    // Elegant Footer
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 12.dp)
-                            .testTag("about_footer"),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "Quran Radio World",
-                            style = MaterialTheme.typography.titleSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 14.sp
-                            )
-                        )
-
-                        Spacer(modifier = Modifier.height(2.dp))
-
-                        Text(
-                            text = appString(StringKey.APP_TITLE),
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = SkyBluePrimary,
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 12.sp
-                            )
-                        )
-
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        Text(
-                            text = "صنع بكل حـــــــ ❣️ ــــــــب في مصر",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 12.sp
-                            )
-                        )
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        Text(
-                            text = "© 2026 Quran Radio World",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                                fontSize = 11.sp
-                            )
-                        )
-
-                        Spacer(modifier = Modifier.height(2.dp))
-
-                        Text(
-                            text = appString(StringKey.ABOUT_ALL_RIGHTS_RESERVED),
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                fontSize = 11.sp
-                            )
-                        )
                     }
 
                     Spacer(modifier = Modifier.height(90.dp))
