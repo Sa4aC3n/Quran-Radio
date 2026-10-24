@@ -11,6 +11,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
@@ -93,11 +94,14 @@ class MainActivity : ComponentActivity() {
 
     private fun handlePlayStationId(stationId: String) {
         lifecycleScope.launch {
-            viewModel.allStations.collect { stations ->
+            try {
+                val stations = viewModel.allStations.first { it.isNotEmpty() }
                 val station = stations.find { it.id == stationId }
                 if (station != null) {
                     viewModel.playStation(station)
                 }
+            } catch (e: Exception) {
+                android.util.Log.w("MainActivity", "Failed to resolve deep link station: ${e.message}")
             }
         }
     }
