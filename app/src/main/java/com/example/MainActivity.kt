@@ -52,6 +52,9 @@ class MainActivity : ComponentActivity() {
             handlePlayStationId(deepLinkStationId)
         }
 
+        // Handle possible deep link khatma
+        handleKhatmaIntent(intent)
+
         setContent {
             val themeMode by viewModel.themeMode.collectAsState()
             val currentLanguage by viewModel.appLanguage.collectAsState()
@@ -89,6 +92,22 @@ class MainActivity : ComponentActivity() {
         val deepLinkStationId = extractDeepLinkStationId(intent)
         if (deepLinkStationId != null) {
             handlePlayStationId(deepLinkStationId)
+        }
+        handleKhatmaIntent(intent)
+    }
+
+    private fun handleKhatmaIntent(intent: Intent?) {
+        val uri = intent?.data ?: return
+        if (uri.scheme == "quranradio" && uri.host == "khatma") {
+            lifecycleScope.launch {
+                try {
+                    val groupKhatmaRepository = com.example.data.GroupKhatmaRepository(this@MainActivity)
+                    val userProfile = groupKhatmaRepository.userProfile.first()
+                    groupKhatmaRepository.joinKhatmaByCode(uri.toString(), userProfile.userName)
+                } catch (e: Exception) {
+                    android.util.Log.w("MainActivity", "Failed to resolve deep link khatma: ${e.message}")
+                }
+            }
         }
     }
 

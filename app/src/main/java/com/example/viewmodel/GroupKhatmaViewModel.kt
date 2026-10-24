@@ -163,14 +163,22 @@ class GroupKhatmaViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun shareKhatmaInvite(context: Context, khatma: GroupKhatma) {
+        val encodedTitle = try { java.net.URLEncoder.encode(khatma.title, "UTF-8") } catch (_: Exception) { khatma.title }
+        val encodedCreator = try { java.net.URLEncoder.encode(khatma.creatorName, "UTF-8") } catch (_: Exception) { khatma.creatorName }
+        val shareLink = "quranradio://khatma?code=${khatma.inviteCode}&title=$encodedTitle&creator=$encodedCreator"
+
         val shareText = """
             🕌 دعوة للمشاركة في الختمة القرآنية الجماعية
             
             📖 اسم الختمة: ${khatma.title}
+            👤 منشئ الختمة: ${khatma.creatorName}
             🔑 كود الانضمام: ${khatma.inviteCode}
             
-            انضم إلينا الآن عبر تطبيق إذاعات القرآن الكريم واحجز جزئك المبارك:
-            https://play.google.com/store/apps/details?id=com.aistudio.quranradio.kxmpzq
+            🔗 رابط الانضمام المباشر:
+            $shareLink
+            
+            تطبيق إذاعات القرآن الكريم:
+            https://play.google.com/store/apps/details?id=com.aistudio.quranradioworld.live
             
             نسأل الله القبول للجميع 🤲
         """.trimIndent()

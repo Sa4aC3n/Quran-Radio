@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentPaste
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.material.icons.filled.GroupAdd
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Person
@@ -121,15 +123,26 @@ fun JoinKhatmaDialog(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
+                val clipboardManager = LocalClipboardManager.current
+
                 // Code input
                 OutlinedTextField(
                     value = code,
                     onValueChange = {
-                        code = it.uppercase()
+                        val input = it.trim()
+                        val codeRegex = Regex("""KH-[A-Z0-9]{4,10}""", RegexOption.IGNORE_CASE)
+                        val match = codeRegex.find(input)
+                        code = if (match != null && (input.contains("\n") || input.contains(" "))) {
+                            input
+                        } else if (!input.contains("\n") && !input.contains(" ")) {
+                            input.uppercase()
+                        } else {
+                            input
+                        }
                         errorMessage = null
                     },
-                    label = { Text("كود الدعوة (مثال: KH-QURAN)") },
-                    placeholder = { Text("KH-XXXX") },
+                    label = { Text("كود الدعوة أو رسالة الدعوة") },
+                    placeholder = { Text("KH-XXXX أو الصق رسالة الدعوة") },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Key,
@@ -137,7 +150,23 @@ fun JoinKhatmaDialog(
                             tint = SkyBluePrimary
                         )
                     },
-                    singleLine = true,
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            val clipText = clipboardManager.getText()?.text
+                            if (!clipText.isNullOrBlank()) {
+                                code = clipText.trim()
+                                errorMessage = null
+                            }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.ContentPaste,
+                                contentDescription = "لصق من الحافظة",
+                                tint = SkyBluePrimary
+                            )
+                        }
+                    },
+                    singleLine = false,
+                    maxLines = 3,
                     shape = RoundedCornerShape(14.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = SkyBluePrimary,

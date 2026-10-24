@@ -14,6 +14,7 @@ object WorkManagerScheduler {
     private const val TAG = "WorkManagerScheduler"
     private const val WORK_SPIRITUAL_REMINDERS = "quran_radio_spiritual_reminders_work"
     private const val WORK_DAILY_PRAYER_RESCHEDULE = "quran_radio_daily_prayer_reschedule_work"
+    private const val WORK_HARAM_LIVE_SYNC = "quran_radio_haram_live_sync_work"
 
     fun setupPeriodicBackgroundTasks(context: Context) {
         try {
@@ -43,7 +44,19 @@ object WorkManagerScheduler {
                 rescheduleWorkRequest
             )
 
-            Log.d(TAG, "Successfully initialized periodic background WorkManager tasks (2-hour spiritual reminders & 12-hour prayer safety sync)")
+            // 3. Periodic Haram Live Recitation Sync (Every 1 hour)
+            val haramWorkRequest = PeriodicWorkRequestBuilder<HaramLiveSyncWorker>(
+                1, TimeUnit.HOURS,
+                15, TimeUnit.MINUTES
+            ).build()
+
+            workManager.enqueueUniquePeriodicWork(
+                WORK_HARAM_LIVE_SYNC,
+                ExistingPeriodicWorkPolicy.KEEP,
+                haramWorkRequest
+            )
+
+            Log.d(TAG, "Successfully initialized periodic background WorkManager tasks (reminders, prayer safety sync, and Haram live sync)")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to schedule background WorkManager tasks", e)
         }

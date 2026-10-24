@@ -122,21 +122,77 @@ class GroupKhatmaRepository(context: Context) {
     }
 
     suspend fun joinKhatmaByCode(rawCode: String, userName: String): Result<GroupKhatma> {
-        val cleanCode = rawCode.trim().uppercase()
+        val trimmedInput = rawCode.trim()
         val trimmedUser = userName.trim()
 
-        if (cleanCode.isBlank()) {
+        if (trimmedInput.isBlank()) {
             return Result.failure(IllegalArgumentException("يرجى إدخال كود الدعوة"))
+        }
+
+        // Extract invite code (e.g. KH-XXXXX) if present
+        val codeRegex = Regex("""KH-[A-Z0-9]{4,10}""", RegexOption.IGNORE_CASE)
+        val extractedCode = codeRegex.find(trimmedInput)?.value?.uppercase()
+            ?: (if (!trimmedInput.contains("\n") && !trimmedInput.contains(" ") && trimmedInput.length <= 15) trimmedInput.uppercase() else "")
+
+        // Parse optional offline sharing metadata (title, creator) from URL, deep link, or text
+        var parsedTitle: String? = null
+        var parsedCreator: String? = null
+
+        if (trimmedInput.contains("quranradio://khatma") || trimmedInput.contains("code=")) {
+            try {
+                val queryStr = if (trimmedInput.contains("?")) trimmedInput.substringAfter("?") else trimmedInput
+                val params = queryStr.split("&").associate {
+                    val parts = it.split("=")
+                    if (parts.size >= 2) parts[0].trim() to java.net.URLDecoder.decode(parts[1].trim(), "UTF-8") else parts[0].trim() to ""
+                }
+                params["title"]?.let { if (it.isNotBlank()) parsedTitle = it }
+                params["creator"]?.let { if (it.isNotBlank()) parsedCreator = it }
+            } catch (_: Exception) {}
+        }
+
+        if (parsedTitle == null) {
+            val titleRegex = Regex("""(?:اسم الختمة|الختمة)\s*:\s*([^\n\r]+)""")
+            titleRegex.find(trimmedInput)?.groupValues?.getOrNull(1)?.trim()?.let {
+                if (it.isNotBlank()) parsedTitle = it
+            }
+        }
+
+        if (parsedCreator == null) {
+            val creatorRegex = Regex("""(?:منشئ الختمة|أنشأها|المنشئ|بواسطة)\s*:\s*([^\n\r]+)""")
+            creatorRegex.find(trimmedInput)?.groupValues?.getOrNull(1)?.trim()?.let {
+                if (it.isNotBlank()) parsedCreator = it
+            }
+        }
+
+        val targetCode = when {
+            extractedCode.isNotBlank() -> extractedCode
+            trimmedInput.length <= 15 && !trimmedInput.contains("\n") -> trimmedInput.uppercase()
+            else -> "KH-${UUID.randomUUID().toString().take(5).uppercase()}"
         }
 
         var foundKhatma: GroupKhatma? = null
 
         updateKhatmasList { currentList ->
-            val existing = currentList.firstOrNull { it.inviteCode.equals(cleanCode, ignoreCase = true) }
+            val existing = currentList.firstOrNull { it.inviteCode.equals(targetCode, ignoreCase = true) }
             if (existing != null) {
                 foundKhatma = existing
+                currentList
+            } else if (parsedTitle != null) {
+                val importedKhatma = GroupKhatma(
+                    id = UUID.randomUUID().toString(),
+                    title = parsedTitle!!,
+                    inviteCode = targetCode,
+                    creatorName = parsedCreator ?: "فاعل خير",
+                    createdAtMillis = System.currentTimeMillis(),
+                    targetDateMillis = null,
+                    description = null,
+                    parts = GroupKhatma.defaultKhatmaParts()
+                )
+                foundKhatma = importedKhatma
+                listOf(importedKhatma) + currentList
+            } else {
+                currentList
             }
-            currentList
         }
 
         if (trimmedUser.isNotBlank() && foundKhatma != null) {
@@ -147,7 +203,7 @@ class GroupKhatmaRepository(context: Context) {
             setLastOpenedKhatmaId(foundKhatma!!.id)
             Result.success(foundKhatma!!)
         } else {
-            Result.failure(IllegalArgumentException("لم يتم العثور على ختمة مسجلة بهذا الكود"))
+            Result.failure(IllegalArgumentException("لم يتم العثور على ختمة مسجلة بهذا الكود على هذا الجهاز. يمكنك نسخ رسالة الدعوة كاملة أو فتح الرابط للانضمام تلقائياً."))
         }
     }
 

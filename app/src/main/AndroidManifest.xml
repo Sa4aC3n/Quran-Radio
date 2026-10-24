@@ -51,6 +51,16 @@
                     android:scheme="quranradio"
                     android:host="station" />
             </intent-filter>
+
+            <!-- Deep linking support for quranradio://khatma -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="quranradio"
+                    android:host="khatma" />
+            </intent-filter>
         </activity>
 
         <service
