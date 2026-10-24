@@ -77,21 +77,26 @@ class QuranRadioApplication : Application(), ImageLoaderFactory {
     }
 
     override fun newImageLoader(): ImageLoader {
+        val activityManager = getSystemService(android.content.Context.ACTIVITY_SERVICE) as? android.app.ActivityManager
+        val isLowRam = activityManager?.isLowRamDevice == true
+
         return ImageLoader.Builder(this)
             .memoryCache {
                 MemoryCache.Builder(this)
-                    .maxSizePercent(0.20) // Limit in-memory bitmap cache to 20% of available app heap
+                    // On low-RAM (<=2GB) devices, cut memory cache to 10% to prevent OutOfMemoryError
+                    .maxSizePercent(if (isLowRam) 0.10 else 0.20)
                     .build()
             }
             .diskCache {
                 DiskCache.Builder()
                     .directory(cacheDir.resolve("image_cache"))
-                    .maxSizeBytes(50L * 1024 * 1024) // 50 MB disk cache limit
+                    // On low-RAM devices with limited/slow storage, cap disk cache to 20MB
+                    .maxSizeBytes(if (isLowRam) 20L * 1024 * 1024 else 50L * 1024 * 1024)
                     .build()
             }
             .memoryCachePolicy(CachePolicy.ENABLED)
             .diskCachePolicy(CachePolicy.ENABLED)
-            .crossfade(true)
+            .crossfade(!isLowRam)
             .respectCacheHeaders(false)
             .build()
     }

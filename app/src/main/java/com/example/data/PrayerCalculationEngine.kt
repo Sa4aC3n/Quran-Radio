@@ -146,7 +146,7 @@ object PrayerCalculationEngine {
         val elapsed = (now - prevMillis).coerceIn(0L, totalSpan)
         val progress = (elapsed.toFloat() / totalSpan.toFloat()).coerceIn(0f, 1f)
 
-        val gregorianFormatted = SimpleDateFormat("EEEE, d MMMM yyyy", Locale("ar")).format(calendar.time)
+        val gregorianFormatted = SimpleDateFormat("EEEE, d MMMM yyyy", Locale.forLanguageTag("ar")).format(calendar.time)
         val hijriFormatted = getHijriDateFormatted(calendar)
 
         return DailyPrayerSchedule(

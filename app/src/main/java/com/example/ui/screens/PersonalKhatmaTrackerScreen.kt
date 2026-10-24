@@ -475,7 +475,7 @@ fun PersonalKhatmaTrackerContent(
                                             fontSize = 15.sp
                                         )
                                     )
-                                    val dateStr = SimpleDateFormat("dd MMMM yyyy", Locale("ar")).format(Date(currentKhatma.lastUpdatedAtMillis))
+                                    val dateStr = SimpleDateFormat("dd MMMM yyyy", Locale.forLanguageTag("ar")).format(Date(currentKhatma.lastUpdatedAtMillis))
                                     Text(
                                         text = "آخر تحديث: $dateStr",
                                         style = MaterialTheme.typography.labelSmall.copy(

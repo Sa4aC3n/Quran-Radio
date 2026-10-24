@@ -51,29 +51,34 @@ class AppLocationManager(private val context: Context) {
         }
 
         try {
-            // Try FusedLocationProviderClient first
-            val location = suspendCancellableCoroutine<Location?> { cont ->
-                val cts = CancellationTokenSource()
-                fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cts.token)
-                    .addOnSuccessListener { loc ->
-                        if (loc != null) {
-                            cont.resume(loc)
-                        } else {
-                            // Try last known location
-                            fusedLocationClient.lastLocation.addOnSuccessListener { lastLoc ->
-                                cont.resume(lastLoc)
-                            }.addOnFailureListener {
-                                cont.resume(null)
+            // Try FusedLocationProviderClient with non-GMS fallback protection
+            val location = try {
+                suspendCancellableCoroutine<Location?> { cont ->
+                    val cts = CancellationTokenSource()
+                    fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cts.token)
+                        .addOnSuccessListener { loc ->
+                            if (loc != null) {
+                                cont.resume(loc)
+                            } else {
+                                // Try last known location
+                                fusedLocationClient.lastLocation.addOnSuccessListener { lastLoc ->
+                                    cont.resume(lastLoc)
+                                }.addOnFailureListener {
+                                    cont.resume(null)
+                                }
                             }
                         }
-                    }
-                    .addOnFailureListener {
-                        cont.resume(null)
-                    }
+                        .addOnFailureListener {
+                            cont.resume(null)
+                        }
 
-                cont.invokeOnCancellation {
-                    cts.cancel()
+                    cont.invokeOnCancellation {
+                        cts.cancel()
+                    }
                 }
+            } catch (_: Throwable) {
+                // Catches NoClassDefFoundError / GooglePlayServicesNotAvailableException on Huawei & de-Googled devices
+                null
             }
 
             val finalLocation = location ?: getSystemLocationFallback()
@@ -111,7 +116,7 @@ class AppLocationManager(private val context: Context) {
     suspend fun reverseGeocode(lat: Double, lng: Double): Triple<String, String, String> = withContext(Dispatchers.IO) {
         try {
             if (Geocoder.isPresent()) {
-                val geocoder = Geocoder(context, Locale("ar"))
+                val geocoder = Geocoder(context, Locale.forLanguageTag("ar"))
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     val addresses = suspendCancellableCoroutine<List<Address>> { cont ->
                         geocoder.getFromLocation(lat, lng, 1) { addresses ->
