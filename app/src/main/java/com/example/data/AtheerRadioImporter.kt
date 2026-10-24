@@ -51,7 +51,7 @@ class AtheerRadioImporter(
     suspend fun loadFromSeed(): List<RadioStation> = withContext(Dispatchers.IO) {
         val stations = mutableListOf<RadioStation>()
         try {
-            val jsonStr = context.assets.open(SEED_FILE).bufferedReader().use { it.readText() }
+            val jsonStr = context.assets.open(SEED_FILE).bufferedReader().use { it.readText() }.trim().removePrefix("\uFEFF")
             val array = JSONArray(jsonStr)
             for (i in 0 until array.length()) {
                 val obj = array.getJSONObject(i)
