@@ -85,7 +85,7 @@ fun AtheerStatusDialog(
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                     )
                     Text(
-                        text = "Live Stream Engine • Multi-Stream Failover",
+                        text = "Unified Stream Network • Smart Failover",
                         style = MaterialTheme.typography.bodySmall.copy(
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -161,7 +161,7 @@ fun AtheerStatusDialog(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "البثوث مشغلة مباشرة من سيرفرات الصوت المعتمدة الرسمية بجودة نقية ومستقرة.",
+                            text = "البثوث مشغلة ومحمية مباشرة عبر سيرفرات الصوت المعتمدة الرسمية بجودة نقية ومستقرة.",
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant

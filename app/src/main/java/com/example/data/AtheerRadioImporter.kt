@@ -169,7 +169,7 @@ class AtheerRadioImporter(
                                         sourceName = "Quran Radio Network",
                                         sourceWebsite = "",
                                         sourceUrl = "",
-                                        logoUrl = "https://www.atheer-radio.com/assets/imgs/cat$catId.png",
+                                        logoUrl = "",
                                         description = "بث مباشر عالي الجودة لإذاعة $name.",
                                         isVerified = true,
                                         streamStatus = "ONLINE",
@@ -425,7 +425,7 @@ class AtheerRadioImporter(
                 sourceName = "Quran Radio Network",
                 sourceWebsite = "",
                 sourceUrl = "",
-                logoUrl = obj.optString("logoUrl", ""),
+                logoUrl = obj.optString("logoUrl", "").let { if (it.contains("atheer-radio.com")) "" else it },
                 description = obj.optString("description", "").let { desc ->
                     if (desc.contains("أثير") || desc.contains("Atheer")) {
                         "بث مباشر عالي الجودة لإذاعة $name."

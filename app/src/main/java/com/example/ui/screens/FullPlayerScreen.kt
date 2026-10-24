@@ -152,23 +152,44 @@ fun FullPlayerScreen(
                     }
                 },
                 actions = {
-                    // Share Button
+                    // Share Button with In-App Deep Link
                     IconButton(
                         onClick = {
                             if (station != null) {
                                 val localizedStationName = station.localizedName(currentLang)
+                                val deepLink = "quranradio://station/${station.id}"
                                 val playStoreUrl = "https://play.google.com/store/apps/details?id=com.aistudio.quranradioworld.live"
+
                                 val shareMessage = if (currentLang == AppLanguage.AR) {
-                                    "استمع الآن إلى $localizedStationName عبر تطبيق راديو القرآن الكريم 📻❤️\nحمل التطبيق مجاناً من متجر جوجل بلاي:\n$playStoreUrl"
+                                    """
+                                    📻 استمع الآن إلى $localizedStationName
+                                    عبر تطبيق إذاعات القرآن الكريم 🎧✨
+
+                                    🔗 رابط التشغيل المباشر داخل التطبيق:
+                                    $deepLink
+
+                                    📲 لتحميل التطبيق مجاناً من متجر Google Play:
+                                    $playStoreUrl
+                                    """.trimIndent()
                                 } else {
-                                    "Listen now to $localizedStationName on Quran Radio World 📻❤️\nDownload the app free from Google Play:\n$playStoreUrl"
+                                    """
+                                    📻 Listen now to $localizedStationName
+                                    on Quran Radio World 🎧✨
+
+                                    🔗 Open directly in app:
+                                    $deepLink
+
+                                    📲 Download free from Google Play:
+                                    $playStoreUrl
+                                    """.trimIndent()
                                 }
                                 val sendIntent: Intent = Intent().apply {
                                     action = Intent.ACTION_SEND
                                     putExtra(Intent.EXTRA_TEXT, shareMessage)
+                                    putExtra(Intent.EXTRA_SUBJECT, localizedStationName)
                                     type = "text/plain"
                                 }
-                                val shareIntent = Intent.createChooser(sendIntent, localizedStationName)
+                                val shareIntent = Intent.createChooser(sendIntent, "مشاركة إذاعة $localizedStationName")
                                 context.startActivity(shareIntent)
                             }
                         }
