@@ -42,12 +42,18 @@ class QuranMediaService : MediaSessionService() {
 
     private var mediaSession: MediaSession? = null
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private var isBackgroundPlayEnabledCached: Boolean = true
 
     override fun onCreate() {
         super.onCreate()
         ensureNotificationChannel()
 
         val app = application as? QuranRadioApplication
+        serviceScope.launch {
+            app?.userPreferencesRepository?.isBackgroundPlayEnabled?.collect { enabled ->
+                isBackgroundPlayEnabledCached = enabled
+            }
+        }
         val playerManager = app?.playerManager
         val player = playerManager?.getPlayer()
 
@@ -391,13 +397,7 @@ class QuranMediaService : MediaSessionService() {
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
         val app = application as? QuranRadioApplication
-        val isBgEnabled = try {
-            kotlinx.coroutines.runBlocking {
-                app?.userPreferencesRepository?.isBackgroundPlayEnabled?.first() ?: false
-            }
-        } catch (_: Exception) {
-            false
-        }
+        val isBgEnabled = isBackgroundPlayEnabledCached
         val player = mediaSession?.player
         val isPlaying = player != null && player.playWhenReady && player.playbackState != Player.STATE_ENDED && player.playbackState != Player.STATE_IDLE
 

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Enforce HTTPS strictly for backend APIs, databases and cloud services -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">api.alquran.cloud</domain>
+        <domain includeSubdomains="true">api.mp3quran.net</domain>
+        <domain includeSubdomains="true">firebaseio.com</domain>
+        <domain includeSubdomains="true">googleapis.com</domain>
+        <domain includeSubdomains="true">github.com</domain>
+    </domain-config>
+
+    <!-- Permit cleartext solely for legacy audio broadcast servers (Icecast/Shoutcast) -->
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>
