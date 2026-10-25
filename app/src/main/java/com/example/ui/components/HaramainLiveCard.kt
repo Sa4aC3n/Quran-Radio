@@ -11,6 +11,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -125,13 +126,23 @@ fun HaramainLiveCard(
     val madinahChannel = remember { repository.getChannel(HaramainChannelId.MADINAH) }
 
     var activeChannel by remember { mutableStateOf<HaramainLiveChannel?>(null) }
+    var isFullWidth by remember { mutableStateOf(false) }
     var isFullScreen by remember { mutableStateOf(false) }
+
+    val horizontalPadding by animateDpAsState(
+        targetValue = if (isFullWidth && activeChannel != null) 0.dp else 16.dp,
+        label = "haramain_h_padding"
+    )
+    val verticalPadding by animateDpAsState(
+        targetValue = if (isFullWidth && activeChannel != null) 2.dp else 6.dp,
+        label = "haramain_v_padding"
+    )
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         Column(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 6.dp)
+                .padding(horizontal = horizontalPadding, vertical = verticalPadding)
         ) {
             if (activeChannel == null) {
                 // Two side-by-side cards view
@@ -176,8 +187,13 @@ fun HaramainLiveCard(
                 val current = activeChannel!!
                 HaramainEmbeddedPlayer(
                     channel = current,
+                    isFullWidth = isFullWidth,
+                    onToggleFullWidth = {
+                        isFullWidth = !isFullWidth
+                    },
                     onClose = {
                         activeChannel = null
+                        isFullWidth = false
                     },
                     onSwitchChannel = {
                         val next = if (current.id == HaramainChannelId.MAKKAH) madinahChannel else makkahChannel
@@ -344,12 +360,27 @@ private fun HaramainChannelThumbCard(
 @Composable
 private fun HaramainEmbeddedPlayer(
     channel: HaramainLiveChannel,
+    isFullWidth: Boolean,
+    onToggleFullWidth: () -> Unit,
     onClose: () -> Unit,
     onSwitchChannel: () -> Unit,
     onFullScreenToggle: () -> Unit
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+
+    val cornerRadius by animateDpAsState(
+        targetValue = if (isFullWidth) 0.dp else 20.dp,
+        label = "player_corner_radius"
+    )
+    val shadowElevation by animateDpAsState(
+        targetValue = if (isFullWidth) 0.dp else 6.dp,
+        label = "player_shadow"
+    )
+    val borderWidth by animateDpAsState(
+        targetValue = if (isFullWidth) 0.dp else 1.dp,
+        label = "player_border"
+    )
 
     var playerUiState by remember { mutableStateOf(HaramainPlayerUiState.CONNECTING) }
     var isPlaying by remember { mutableStateOf(true) }
@@ -537,9 +568,9 @@ private fun HaramainEmbeddedPlayer(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .shadow(6.dp, RoundedCornerShape(20.dp)),
-        shape = RoundedCornerShape(20.dp),
+            .clip(RoundedCornerShape(cornerRadius))
+            .shadow(shadowElevation, RoundedCornerShape(cornerRadius)),
+        shape = RoundedCornerShape(cornerRadius),
         color = DarkBackground
     ) {
         Box(
@@ -547,7 +578,10 @@ private fun HaramainEmbeddedPlayer(
                 .fillMaxWidth()
                 .aspectRatio(16f / 9f)
                 .background(Color.Black)
-                .border(1.dp, SkyBluePrimary.copy(alpha = 0.4f), RoundedCornerShape(20.dp))
+                .then(
+                    if (isFullWidth) Modifier
+                    else Modifier.border(borderWidth, SkyBluePrimary.copy(alpha = 0.4f), RoundedCornerShape(cornerRadius))
+                )
         ) {
             // 1. AndroidView Media3 PlayerView (Video Surface)
             AndroidView(
@@ -635,7 +669,7 @@ private fun HaramainEmbeddedPlayer(
                     }
                 }
 
-                // Top Actions: Switch Channel & Close Player
+                // Top Actions: Switch Channel, Landscape Fullscreen & Close Player
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(2.dp)
@@ -650,6 +684,19 @@ private fun HaramainEmbeddedPlayer(
                             imageVector = Icons.Default.SwapHoriz,
                             contentDescription = "التبديل إلى $otherChannelName",
                             tint = SkyBluePrimary,
+                            modifier = Modifier.size(19.dp)
+                        )
+                    }
+
+                    // Fullscreen Landscape Dialog button
+                    IconButton(
+                        onClick = onFullScreenToggle,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Fullscreen,
+                            contentDescription = "عرض ملء الشاشة أفقيًا",
+                            tint = PureWhite,
                             modifier = Modifier.size(19.dp)
                         )
                     }
@@ -839,15 +886,15 @@ private fun HaramainEmbeddedPlayer(
                         )
                     }
 
-                    // Full Screen Button (⛶)
+                    // Full Width Expand Button (زر تكبير حجم العرض بعرض الشاشة)
                     IconButton(
-                        onClick = onFullScreenToggle,
+                        onClick = onToggleFullWidth,
                         modifier = Modifier.size(32.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Fullscreen,
-                            contentDescription = "ملء الشاشة",
-                            tint = PureWhite,
+                            imageVector = if (isFullWidth) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
+                            contentDescription = if (isFullWidth) "تصغير العرض" else "تكبير بعرض الشاشة",
+                            tint = if (isFullWidth) GoldAccent else PureWhite,
                             modifier = Modifier.size(22.dp)
                         )
                     }
@@ -869,6 +916,16 @@ private fun HaramainFullScreenDialog(
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+
+    DisposableEffect(Unit) {
+        val activity = context as? Activity
+        val originalOrientation = activity?.requestedOrientation ?: ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+
+        onDispose {
+            activity?.requestedOrientation = originalOrientation
+        }
+    }
 
     var isPlaying by remember { mutableStateOf(true) }
     var isMuted by remember { mutableStateOf(false) }
