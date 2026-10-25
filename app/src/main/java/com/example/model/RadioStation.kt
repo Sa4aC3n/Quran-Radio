@@ -1,5 +1,9 @@
 package com.example.model
 
+import androidx.compose.runtime.Immutable
+
+
+
 enum class StationCategory(val titleAr: String) {
     QURAN("إذاعات القرآن الكريم"),
     OFFICIAL("إذاعات رسمية"),
@@ -19,6 +23,7 @@ enum class StationCategory(val titleAr: String) {
     ISLAMIC("إذاعات إسلامية عامة")
 }
 
+@Immutable
 data class RadioStation(
     val id: String,
     val name: String,

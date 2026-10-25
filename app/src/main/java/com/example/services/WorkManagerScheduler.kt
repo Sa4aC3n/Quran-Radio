@@ -28,7 +28,7 @@ object WorkManagerScheduler {
 
             workManager.enqueueUniquePeriodicWork(
                 WORK_SPIRITUAL_REMINDERS,
-                ExistingPeriodicWorkPolicy.UPDATE,
+                ExistingPeriodicWorkPolicy.KEEP,
                 spiritualWorkRequest
             )
 
@@ -40,7 +40,7 @@ object WorkManagerScheduler {
 
             workManager.enqueueUniquePeriodicWork(
                 WORK_DAILY_PRAYER_RESCHEDULE,
-                ExistingPeriodicWorkPolicy.UPDATE,
+                ExistingPeriodicWorkPolicy.KEEP,
                 rescheduleWorkRequest
             )
 

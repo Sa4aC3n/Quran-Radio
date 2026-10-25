@@ -1,20 +1,14 @@
 # ===================================================================
 # Quran Radio World - ProGuard / R8 Optimization & Obfuscation Rules
-# Tailored specifically for actual libraries and code in this project
+# High-Efficiency Stripping, Code Optimization & Obfuscation
 # ===================================================================
 
 # 1. Stack Trace Preservation & Line Number Mapping
-# Enables readable Crashlytics and Google Play Console stack traces while allowing full obfuscation
 -renamesourcefileattribute SourceFile
 -keepattributes SourceFile,LineNumberTable
 -keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
 
-# 2. R8 Optimization Settings
-# Optimization and inlining are enabled by default in r8 / proguard-android-optimize.txt
-# (Note: -repackageclasses is strictly avoided to prevent breaking Room & WorkManager reflection)
-
-# 3. Strip Debug & Verbose Logs in Release Builds
-# Eliminates Log.d, Log.v, Log.i bytecode and format strings from release binaries
+# 2. Aggressive Log & Debug Stripping in Release Builds
 -assumenosideeffects class android.util.Log {
     public static boolean isLoggable(java.lang.String, int);
     public static int v(...);
@@ -22,7 +16,14 @@
     public static int i(...);
 }
 
-# 4. Android Core Components (Instantiated by Android OS via reflection/manifest)
+# 3. Strip Kotlin Runtime Assertions in Release Builds
+-assumenosideeffects class kotlin.jvm.internal.Intrinsics {
+    public static void checkNotNullParameter(java.lang.Object, java.lang.String);
+    public static void checkNotNull(java.lang.Object, java.lang.String);
+    public static void checkNotNullExpressionValue(java.lang.Object, java.lang.String);
+}
+
+# 4. Android Core Components (Instantiated by Android OS via manifest)
 -keep public class com.example.QuranRadioApplication {
     public <init>();
 }
@@ -54,23 +55,7 @@
     public <init>();
 }
 
-# 6. AndroidX WorkManager & Room (Fixes NoSuchMethodException WorkDatabase_Impl.<init>)
--keep class androidx.work.** { *; }
--keep class androidx.work.impl.** { *; }
--keep class androidx.work.impl.WorkDatabase_Impl {
-    public <init>();
-    public <init>(...);
-    *;
-}
--keep class * extends androidx.work.impl.WorkDatabase {
-    public <init>();
-    *;
-}
--keep class * extends androidx.room.RoomDatabase {
-    public <init>();
-    *;
-}
--keep class androidx.room.** { *; }
+# 6. AndroidX WorkManager (Targeted Worker reflection keeping; allows full R8 dead-code stripping)
 -keep class * extends androidx.work.ListenableWorker {
     public <init>(android.content.Context, androidx.work.WorkerParameters);
 }
@@ -80,28 +65,33 @@
 -keep class com.example.services.HaramLiveSyncWorker {
     public <init>(android.content.Context, androidx.work.WorkerParameters);
 }
+-keep class androidx.work.impl.WorkDatabase_Impl {
+    public <init>();
+    *;
+}
 -dontwarn androidx.work.impl.**
--dontwarn androidx.room.paging.**
 
-# 7. AndroidX Media3 / ExoPlayer (Background Radio, Live TV & Audio Playback)
--keep class androidx.media3.** { *; }
+# 7. AndroidX Media3 / ExoPlayer (Audio & Video Streaming)
+# Surgical rules: keep entry points and player classes, allow R8 to strip unused codecs/formats
+-keep class androidx.media3.session.MediaSessionService { *; }
+-keep class androidx.media3.session.MediaLibraryService { *; }
+-keep class androidx.media3.session.MediaSessionService$* { *; }
+-keep class androidx.media3.exoplayer.ExoPlayer { *; }
 -dontwarn androidx.media3.**
 -keep class android.media.MediaCodec** { *; }
 -keep class com.example.player.** { *; }
 
-# 7. OkHttp & Okio
+# 8. Compose Runtime Stability Preservation
+-keepclassmembers class * {
+    @androidx.compose.runtime.Stable <fields>;
+    @androidx.compose.runtime.Immutable <fields>;
+}
+
+# 9. Third-party Library Warnings Suppression
 -dontwarn okhttp3.**
 -dontwarn okio.**
-
-# 8. Google Play In-App Updates & Play Services
 -dontwarn com.google.android.play.core.**
 -dontwarn com.google.android.gms.**
-
-# 9. AndroidX DataStore & Preferences
 -dontwarn androidx.datastore.**
-
-# 10. Coil Image Loading
 -dontwarn coil.**
-
-# 11. KotlinX Coroutines
 -dontwarn kotlinx.coroutines.**

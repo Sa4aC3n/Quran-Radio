@@ -2,6 +2,7 @@ package com.example.model
 
 import com.example.R
 import java.util.Calendar
+import androidx.compose.runtime.Immutable
 
 /**
  * The specific prayer and solar milestones.
@@ -245,6 +246,7 @@ enum class AdhanSound(
 /**
  * Individual prayer time for today or given date.
  */
+@Immutable
 data class PrayerTimeItem(
     val type: PrayerType,
     val timeInMillis: Long,
@@ -260,6 +262,7 @@ data class PrayerTimeItem(
 /**
  * Full day prayer schedule with calendar metadata.
  */
+@Immutable
 data class DailyPrayerSchedule(
     val dateInMillis: Long,
     val gregorianDateFormatted: String,
@@ -287,6 +290,7 @@ data class DailyPrayerSchedule(
 /**
  * Qibla Compass state and bearing info.
  */
+@Immutable
 data class QiblaInfo(
     val userLatitude: Double,
     val userLongitude: Double,

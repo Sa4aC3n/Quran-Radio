@@ -1,5 +1,7 @@
 import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
 import java.util.Base64
+import java.util.Properties
+import java.io.FileInputStream
 
 plugins {
   alias(libs.plugins.android.application)
@@ -34,14 +36,22 @@ android {
       } catch (_: Exception) {}
     }
 
+    val localProps = Properties()
+    val localPropsFile = file("${rootDir}/local.properties")
+    if (localPropsFile.exists()) {
+      FileInputStream(localPropsFile).use { fis ->
+        localProps.load(fis)
+      }
+    }
+
     create("release") {
-      val customKeystorePath = System.getenv("KEYSTORE_PATH") ?: rootDir.resolve("local.properties").takeIf { it.exists() }?.let { f -> java.util.Properties().apply { f.inputStream().use { load(it) } }.getProperty("KEYSTORE_PATH") }
+      val customKeystorePath = System.getenv("KEYSTORE_PATH") ?: localProps.getProperty("KEYSTORE_PATH")
       val customKeystore = customKeystorePath?.let { file(it) } ?: file("${rootDir}/my-upload-key.jks")
       if (customKeystore.exists()) {
         storeFile = customKeystore
-        storePassword = System.getenv("STORE_PASSWORD") ?: rootDir.resolve("local.properties").takeIf { it.exists() }?.let { f -> java.util.Properties().apply { f.inputStream().use { load(it) } }.getProperty("STORE_PASSWORD") }
-        keyAlias = System.getenv("KEY_ALIAS") ?: rootDir.resolve("local.properties").takeIf { it.exists() }?.let { f -> java.util.Properties().apply { f.inputStream().use { load(it) } }.getProperty("KEY_ALIAS") } ?: "upload"
-        keyPassword = System.getenv("KEY_PASSWORD") ?: rootDir.resolve("local.properties").takeIf { it.exists() }?.let { f -> java.util.Properties().apply { f.inputStream().use { load(it) } }.getProperty("KEY_PASSWORD") }
+        storePassword = System.getenv("STORE_PASSWORD") ?: localProps.getProperty("STORE_PASSWORD")
+        keyAlias = System.getenv("KEY_ALIAS") ?: localProps.getProperty("KEY_ALIAS") ?: "upload"
+        keyPassword = System.getenv("KEY_PASSWORD") ?: localProps.getProperty("KEY_PASSWORD")
       } else {
         storeFile = debugKeystore
         storePassword = "android"

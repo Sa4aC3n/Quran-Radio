@@ -1,8 +1,11 @@
 package com.example.model
 
+import androidx.compose.runtime.Immutable
+
 /**
  * Predefined city for location selection and offline prayer calculations.
  */
+@Immutable
 data class CityLocation(
     val id: String,
     val nameAr: String,
