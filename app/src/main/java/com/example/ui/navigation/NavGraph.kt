@@ -42,6 +42,7 @@ import com.example.magicnav.MagicNavigationMenu
 import com.example.ui.components.MiniPlayer
 import com.example.ui.screens.AboutScreen
 import com.example.ui.screens.CountriesScreen
+import com.example.ui.screens.CategoryStationsScreen
 import com.example.ui.screens.CountryDetailScreen
 import com.example.ui.screens.FavoritesScreen
 import com.example.ui.screens.FullPlayerScreen
@@ -231,6 +232,29 @@ fun QuranRadioApp(
                     },
                     onNavigateToSettings = {
                         navController.navigate(Screen.Settings.route) { launchSingleTop = true }
+                    },
+                    onOpenCategory = { category ->
+                        navController.navigate(Screen.CategoryStations.createRoute(category))
+                    },
+                    modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
+                )
+            }
+
+            // Dedicated category screen; category content no longer expands below Home.
+            composable(
+                route = Screen.CategoryStations.route,
+                arguments = listOf(navArgument("category") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val categoryName = backStackEntry.arguments?.getString("category")
+                val category = com.example.model.StationCategory.entries.firstOrNull { it.name == categoryName }
+                    ?: com.example.model.StationCategory.OFFICIAL
+                CategoryStationsScreen(
+                    category = category,
+                    viewModel = viewModel,
+                    onBackClick = { navController.popBackStack() },
+                    onNavigateToStationDetail = { station ->
+                        viewModel.playStation(station)
+                        navController.navigate(Screen.FullPlayer.route)
                     },
                     modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
                 )
