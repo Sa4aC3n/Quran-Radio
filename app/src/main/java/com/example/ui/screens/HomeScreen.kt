@@ -1250,7 +1250,7 @@ private fun HomeKhatmaAction(
         modifier = modifier.height(112.dp),
         shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        border = BorderStroke(1.dp, Color(0xFFD8EAF4)),
         shadowElevation = 1.dp
     ) {
         Column(
@@ -1258,7 +1258,7 @@ private fun HomeKhatmaAction(
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(25.dp))
+            Icon(icon, contentDescription = null, tint = Color(0xFF1684BE), modifier = Modifier.size(25.dp))
             Column(horizontalAlignment = Alignment.End) {
                 Text(title, color = MaterialTheme.colorScheme.onSurface, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 9.sp, maxLines = 2)
@@ -1299,11 +1299,11 @@ private fun HomeQuickShortcuts(
                     modifier = Modifier.weight(1f).clip(RoundedCornerShape(12.dp))
                         .clickable(onClick = action)
                         .background(MaterialTheme.colorScheme.surface)
-                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
+                        .border(1.dp, Color(0xFFD8EAF4), RoundedCornerShape(12.dp))
                         .padding(horizontal = 3.dp, vertical = 9.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(icon, contentDescription = title, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                    Icon(icon, contentDescription = title, tint = Color(0xFF1684BE), modifier = Modifier.size(22.dp))
                     Spacer(Modifier.height(5.dp))
                     Text(
                         title,
