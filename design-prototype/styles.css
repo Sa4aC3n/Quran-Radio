@@ -168,3 +168,50 @@
  .nav-item{font-size:7px;gap:3px}
  .nav-item .icon{width:20px;height:20px}
 }
+
+/* Bottom navigation active-state motion — smooth scale and color transition. */
+.bottom-nav .nav-item{
+  position:relative;
+  color:#5b83a1;
+  transition:color .28s ease,background .28s ease,transform .32s cubic-bezier(.2,.85,.25,1);
+}
+.bottom-nav .nav-item .icon{
+  transform:scale(1);
+  transform-origin:center;
+  transition:transform .34s cubic-bezier(.2,.85,.25,1),color .28s ease,filter .28s ease;
+}
+.bottom-nav .nav-item > span:last-child{
+  transition:color .28s ease,font-weight .28s ease,transform .28s ease;
+}
+.bottom-nav .nav-item.active{
+  color:#087fc0;
+  font-weight:800;
+  background:linear-gradient(180deg,#e4f4ff 0%,#f5fbff 72%,#ffffff00 100%);
+  transform:translateY(-2px);
+}
+.bottom-nav .nav-item.active .icon{
+  transform:scale(1.28);
+  filter:drop-shadow(0 3px 4px #168ac84a);
+}
+.bottom-nav .nav-item.active > span:last-child{
+  color:#087fc0;
+  font-weight:800;
+  transform:translateY(1px);
+}
+.bottom-nav .nav-item.active:after{
+  height:4px;
+  margin-top:3px;
+  border-radius:8px;
+  box-shadow:0 2px 7px #168ac844;
+}
+.bottom-nav .nav-item:active .icon{
+  transform:scale(1.12);
+}
+@media(max-width:680px){
+  .bottom-nav .nav-item.active .icon{transform:scale(1.24)}
+}
+@media(prefers-reduced-motion:reduce){
+  .bottom-nav .nav-item,
+  .bottom-nav .nav-item .icon,
+  .bottom-nav .nav-item > span:last-child{transition:none!important}
+}
