@@ -127,3 +127,27 @@
   .hero-scene img{object-position:32% 52%}
   .hero-copy{width:78%}
 }
+
+
+/* Final responsive polish and keyboard accessibility for the standalone preview. */
+.topbar{min-height:104px}
+.icon-button,.outline-button,.text-button,.nav-item,.quick-item,.category-card,.play-button{outline-offset:3px}
+:where(button,input):focus-visible{outline:3px solid #168ac8;outline-offset:3px}
+.category-card:focus-visible,.quick-item:focus-visible,.nav-item:focus-visible{box-shadow:0 0 0 3px #168ac844,0 8px 20px #167db522}
+.prayer-card{transition:transform .22s ease,box-shadow .22s ease}
+.prayer-card:hover{transform:translateY(-2px);box-shadow:0 12px 28px #176b9b20}
+.outline-button{transition:background .2s,color .2s,border-color .2s,transform .2s}
+.outline-button:active,.text-button:active{transform:scale(.97)}
+.bottom-nav{padding-bottom:max(10px,env(safe-area-inset-bottom))}
+@media(max-width:680px){
+ .topbar{min-height:86px;padding:11px 12px 13px;flex-direction:row;align-items:center;gap:8px}
+ .brand{align-self:center}
+ .hero-scene img{object-position:34% 52%}
+ .bottom-nav{position:sticky}
+}
+@media(max-width:380px){
+ .topbar{min-height:78px;padding-inline:9px}
+ .brand strong{font-size:10px}
+ .brand small{font-size:7px}
+ .searchbox input{min-width:0}
+}
