@@ -23,7 +23,10 @@ Then open `http://localhost:8080/design-prototype/` if serving from the reposito
 - `app.js` — custom inline SVG icons, category data, search filtering, and demo-only controls
 
 ## Review checklist
-- [ ] Compare against the reference on the same screen size.
-- [ ] Replace illustrative CSS mosque artwork with approved image assets if exact photographic matching is required.
+- [x] Use the uploaded Cairo/Nile photograph in the hero card and tune responsive crops.
+- [x] Add the supplied app emblem, geometric pattern, and prayer-card silhouette assets.
+- [x] Preserve 12 categories, five shortcuts, and five bottom-navigation items.
+- [x] Add visible keyboard-focus states and reduced-motion handling.
+- [ ] Compare against the original reference on matching desktop and Android screen sizes.
 - [ ] Verify Arabic typography and RTL on a real Android viewport.
 - [ ] Replace demo controls with real app callbacks only during a separately approved integration.
