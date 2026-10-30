@@ -977,7 +977,7 @@ private fun CairoRadioHeroCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(18.dp)
+                .height(188.dp)
         ) {
             androidx.compose.foundation.Image(
                 painter = androidx.compose.ui.res.painterResource(com.example.R.drawable.cairo_nile_hero),
@@ -993,7 +993,10 @@ private fun CairoRadioHeroCard(
                 )
             )
             Column(
-                modifier = Modifier.fillMaxWidth(0.76f).align(Alignment.CenterEnd),
+                modifier = Modifier
+                    .fillMaxWidth(0.76f)
+                    .align(Alignment.CenterEnd)
+                    .padding(16.dp),
                 horizontalAlignment = Alignment.End
             ) {
                 Surface(
