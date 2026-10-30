@@ -33,6 +33,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.AvTimer
@@ -111,6 +112,9 @@ fun HomeScreen(
     onNavigateToCountries: () -> Unit,
     onNavigateToReciters: () -> Unit,
     onNavigateToFavorites: () -> Unit,
+    onNavigateToPrayer: () -> Unit = {},
+    onNavigateToQibla: () -> Unit = {},
+    onNavigateToGroupKhatma: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val searchResults by viewModel.searchResults.collectAsState()
@@ -438,6 +442,54 @@ fun HomeScreen(
                         }
                     )
                 }
+            }
+        }
+
+
+        // Modern homepage sections: wired to the existing application actions.
+        if (searchQuery.isBlank() && selectedCategory == null) {
+            val cairoStation = searchResults.firstOrNull { it.id == "cairo_quran" }
+            item {
+                CairoRadioHeroCard(
+                    isPlaying = cairoStation != null &&
+                        playerState.currentStation?.id == cairoStation.id &&
+                        playerState.status == PlaybackStatus.PLAYING,
+                    onPlay = {
+                        if (cairoStation != null) {
+                            if (playerState.currentStation?.id == cairoStation.id) {
+                                viewModel.togglePlayPause()
+                            } else {
+                                viewModel.playStation(cairoStation)
+                            }
+                        }
+                    }
+                )
+            }
+            item {
+                HomeCategoryGrid(
+                    onCountries = onNavigateToCountries,
+                    onReciters = onNavigateToReciters,
+                    onQibla = onNavigateToQibla,
+                    onSelectCategory = { viewModel.selectCategory(it) }
+                )
+            }
+            item {
+                HomePrayerCards(
+                    onPrayerTimes = onNavigateToPrayer,
+                    onAdhanSettings = onNavigateToPrayer
+                )
+            }
+            item {
+                HomeKhatmaCards(onOpenKhatma = onNavigateToGroupKhatma)
+            }
+            item {
+                HomeQuickShortcuts(
+                    onLanguage = { isLanguageDialogOpen = true },
+                    onSeason = { isSeasonSettingsOpen = true },
+                    onHaram = { isHaramDialogOpen = true },
+                    onSleepTimer = { isSleepTimerOpen = true },
+                    onHaramain = { isHaramainCardVisible = !isHaramainCardVisible }
+                )
             }
         }
 
@@ -891,5 +943,354 @@ fun HomeScreen(
         },
         onDismiss = { isHaramDialogOpen = false }
     )
+}
+
+
+
+/** Featured Cairo station card. The stream action uses the real RadioViewModel. */
+@Composable
+private fun CairoRadioHeroCard(
+    isPlaying: Boolean,
+    onPlay: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+        shape = RoundedCornerShape(24.dp),
+        color = Color(0xFFE8F6FD),
+        border = BorderStroke(1.dp, Color(0xFFCAE7F5)),
+        shadowElevation = 3.dp
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(Color(0xFFB8E4F7), Color(0xFFE9F7FD), Color(0xFFF8FCFF))
+                    )
+                )
+                .padding(18.dp)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.End
+            ) {
+                Surface(
+                    color = Color(0xFF0878B8),
+                    shape = RoundedCornerShape(18.dp)
+                ) {
+                    Text(
+                        text = "الإذاعة الرئيسية",
+                        color = Color.White,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                    )
+                }
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    text = "إذاعة القرآن الكريم من القاهرة",
+                    color = Color(0xFF124A78),
+                    fontSize = 21.sp,
+                    fontWeight = FontWeight.ExtraBold
+                )
+                Text(
+                    text = "صوت القرآن.. يملأ حياتك نورًا",
+                    color = Color(0xFF527B98),
+                    fontSize = 12.sp
+                )
+                Spacer(Modifier.height(14.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        onClick = onPlay,
+                        shape = CircleShape,
+                        color = Color(0xFF168BC8),
+                        modifier = Modifier.size(54.dp),
+                        shadowElevation = 3.dp
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                contentDescription = if (isPlaying) "إيقاف مؤقت" else "تشغيل إذاعة القاهرة",
+                                tint = Color.White,
+                                modifier = Modifier.size(30.dp)
+                            )
+                        }
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Mosque,
+                            contentDescription = null,
+                            tint = Color(0xFF168BC8),
+                            modifier = Modifier.size(42.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = if (isPlaying) "يعمل الآن" else "استمع مباشرة",
+                                color = Color(0xFF124A78),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp
+                            )
+                            Text(
+                                text = "بث إذاعة القرآن الكريم",
+                                color = Color(0xFF527B98),
+                                fontSize = 10.sp
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private data class HomeCategoryAction(
+    val title: String,
+    val icon: ImageVector,
+    val action: () -> Unit
+)
+
+@Composable
+private fun HomeCategoryGrid(
+    onCountries: () -> Unit,
+    onReciters: () -> Unit,
+    onQibla: () -> Unit,
+    onSelectCategory: (StationCategory) -> Unit
+) {
+    val actions = listOf(
+        HomeCategoryAction("إذاعات الدول", Icons.Default.Public, onCountries),
+        HomeCategoryAction("إذاعات القراء", Icons.Default.Mic, onReciters),
+        HomeCategoryAction("إذاعات رسمية", Icons.Default.Radio) { onSelectCategory(StationCategory.OFFICIAL) },
+        HomeCategoryAction("تلاوات خاشعة", Icons.Default.AutoStories) { onSelectCategory(StationCategory.RECITATION) },
+        HomeCategoryAction("تفسير القرآن", Icons.Default.MenuBook) { onSelectCategory(StationCategory.TAFSIR) },
+        HomeCategoryAction("ترجمات المعاني", Icons.Default.Translate) { onSelectCategory(StationCategory.TRANSLATION) },
+        HomeCategoryAction("السنة النبوية", Icons.Default.AccountBalance) { onSelectCategory(StationCategory.SUNNAH) },
+        HomeCategoryAction("السيرة والقصص", Icons.Default.Mosque) { onSelectCategory(StationCategory.SEERAH_AND_STORIES) },
+        HomeCategoryAction("الفتاوى والأحكام", Icons.Default.Balance) { onSelectCategory(StationCategory.FATWA) },
+        HomeCategoryAction("أذكار الصباح والمساء", Icons.Default.WbSunny) { onSelectCategory(StationCategory.ADHKAR) },
+        HomeCategoryAction("الرقية الشرعية", Icons.Default.Spa) { onSelectCategory(StationCategory.RUQYAH) },
+        HomeCategoryAction("القبلة", Icons.Default.Explore, onQibla)
+    )
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+        verticalArrangement = Arrangement.spacedBy(9.dp)
+    ) {
+        Text(
+            text = "اكتشف الأقسام",
+            color = MaterialTheme.colorScheme.onSurface,
+            fontSize = 17.sp,
+            fontWeight = FontWeight.ExtraBold,
+            modifier = Modifier.padding(bottom = 2.dp)
+        )
+        actions.chunked(4).forEach { rowActions ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                rowActions.forEach { action ->
+                    Surface(
+                        onClick = action.action,
+                        modifier = Modifier.weight(1f).height(106.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        border = BorderStroke(1.dp, Color(0xFFD8EAF4)),
+                        shadowElevation = 1.dp
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxSize().padding(horizontal = 4.dp, vertical = 9.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Box(
+                                modifier = Modifier.size(39.dp).clip(CircleShape)
+                                    .background(Color(0xFFE5F4FC)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = action.icon,
+                                    contentDescription = null,
+                                    tint = Color(0xFF1684BE),
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                            Text(
+                                text = action.title,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                maxLines = 2,
+                                lineHeight = 13.sp
+                            )
+                        }
+                    }
+                }
+                repeat(4 - rowActions.size) { Spacer(Modifier.weight(1f)) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HomePrayerCards(
+    onPrayerTimes: () -> Unit,
+    onAdhanSettings: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(9.dp)
+    ) {
+        HomeFeatureActionCard(
+            title = "مواقيت الصلاة",
+            subtitle = "تابع مواقيت الصلاة حسب موقعك",
+            icon = Icons.Default.AccessTime,
+            dark = true,
+            onClick = onPrayerTimes
+        )
+        HomeFeatureActionCard(
+            title = "منبه الأذان",
+            subtitle = "إعدادات التنبيه ومتابعة الصلاة",
+            icon = Icons.Default.NotificationsActive,
+            dark = false,
+            onClick = onAdhanSettings
+        )
+    }
+}
+
+@Composable
+private fun HomeFeatureActionCard(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    dark: Boolean,
+    onClick: () -> Unit
+) {
+    val foreground = if (dark) Color.White else Color(0xFF174B76)
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(17.dp),
+        color = if (dark) Color(0xFF247FB6) else Color(0xFFF0F8FC),
+        border = BorderStroke(1.dp, if (dark) Color(0xFF247FB6) else Color(0xFFD6EAF4)),
+        shadowElevation = 2.dp
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(15.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Icon(icon, contentDescription = null, tint = foreground, modifier = Modifier.size(34.dp))
+            Column(horizontalAlignment = Alignment.End) {
+                Text(title, color = foreground, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold)
+                Text(subtitle, color = foreground.copy(alpha = .82f), fontSize = 11.sp)
+            }
+        }
+    }
+}
+
+@Composable
+private fun HomeKhatmaCards(onOpenKhatma: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "الختمات",
+            color = MaterialTheme.colorScheme.onSurface,
+            fontSize = 17.sp,
+            fontWeight = FontWeight.ExtraBold
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+            HomeKhatmaAction("ختمة جماعية", "شارك القراءة مع الآخرين", Icons.Default.Groups, onOpenKhatma, Modifier.weight(1f))
+            HomeKhatmaAction("ختمة خاصة", "تابع ختمتك الشخصية", Icons.Default.MenuBook, onOpenKhatma, Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+private fun HomeKhatmaAction(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier.height(112.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, Color(0xFFD8EAF4)),
+        shadowElevation = 1.dp
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(10.dp),
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Icon(icon, contentDescription = null, tint = Color(0xFF1684BE), modifier = Modifier.size(25.dp))
+            Column(horizontalAlignment = Alignment.End) {
+                Text(title, color = MaterialTheme.colorScheme.onSurface, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 9.sp, maxLines = 2)
+            }
+        }
+    }
+}
+
+@Composable
+private fun HomeQuickShortcuts(
+    onLanguage: () -> Unit,
+    onSeason: () -> Unit,
+    onHaram: () -> Unit,
+    onSleepTimer: () -> Unit,
+    onHaramain: () -> Unit
+) {
+    val shortcuts = listOf(
+        Triple("اللغة", Icons.Default.Translate, onLanguage),
+        Triple("رمضان والحج", Icons.Default.AutoAwesome, onSeason),
+        Triple("بث الحرم", Icons.Default.Mosque, onHaram),
+        Triple("مؤقت النوم", Icons.Default.AvTimer, onSleepTimer),
+        Triple("مكة والمدينة", Icons.Default.LiveTv, onHaramain)
+    )
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Text(
+            text = "اختصارات سريعة",
+            color = MaterialTheme.colorScheme.onSurface,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.ExtraBold
+        )
+        Spacer(Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(5.dp)
+        ) {
+            shortcuts.forEach { (title, icon, action) ->
+                Column(
+                    modifier = Modifier.weight(1f).clip(RoundedCornerShape(12.dp))
+                        .clickable(onClick = action)
+                        .background(MaterialTheme.colorScheme.surface)
+                        .border(1.dp, Color(0xFFD8EAF4), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 3.dp, vertical = 9.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(icon, contentDescription = title, tint = Color(0xFF1684BE), modifier = Modifier.size(22.dp))
+                    Spacer(Modifier.height(5.dp))
+                    Text(
+                        title,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        maxLines = 2,
+                        lineHeight = 11.sp
+                    )
+                }
+            }
+        }
+    }
 }
 
