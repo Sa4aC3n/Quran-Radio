@@ -970,6 +970,19 @@ private fun CairoRadioHeroCard(
                 )
                 .padding(18.dp)
         ) {
+            androidx.compose.foundation.Image(
+                painter = androidx.compose.ui.res.painterResource(com.example.R.drawable.cairo_nile_hero),
+                contentDescription = null,
+                modifier = Modifier.matchParentSize(),
+                contentScale = ContentScale.Crop
+            )
+            Box(
+                modifier = Modifier.matchParentSize().background(
+                    Brush.horizontalGradient(
+                        listOf(Color(0xE6E8F6FD), Color(0xD9E9F7FD), Color(0xCFF8FCFF))
+                    )
+                )
+            )
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.End
