@@ -151,3 +151,20 @@
  .brand small{font-size:7px}
  .searchbox input{min-width:0}
 }
+
+
+/* Seven-item navigation mirrors the main app order; RTL places Home at the right. */
+.bottom-nav{grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;padding-inline:7px}
+.nav-item{min-width:0;gap:5px;padding:5px 1px;font-size:clamp(9px,1.05vw,11px);white-space:nowrap}
+.nav-item .icon{width:25px;height:25px}
+.nav-item.active:after{width:clamp(22px,3.2vw,38px)}
+@media(max-width:680px){
+ .bottom-nav{grid-template-columns:repeat(7,minmax(0,1fr));gap:0;padding-inline:3px}
+ .nav-item{font-size:clamp(8px,2.25vw,10px);gap:4px;padding:5px 0}
+ .nav-item .icon{width:22px;height:22px}
+ .nav-item.active:after{width:22px}
+}
+@media(max-width:340px){
+ .nav-item{font-size:7px;gap:3px}
+ .nav-item .icon{width:20px;height:20px}
+}
