@@ -138,20 +138,6 @@ fun HomeScreen(
     var isHaramainMenuExpanded by remember { mutableStateOf(false) }
     var selectedHaramainChannel by remember { mutableStateOf<com.example.model.HaramainChannelId?>(null) }
 
-    val categories: List<Pair<StationCategory?, String>> = listOf(
-        null to appString(StringKey.CAT_ALL),
-        StationCategory.OFFICIAL to appString(StringKey.CAT_OFFICIAL),
-        StationCategory.TAFSIR to appString(StringKey.CAT_TAFSIR),
-        StationCategory.SUNNAH to appString(StringKey.CAT_SUNNAH),
-        StationCategory.FATWA to appString(StringKey.CAT_FATWA),
-        StationCategory.ADHKAR to appString(StringKey.CAT_ADHKAR),
-        StationCategory.RECITATION to appString(StringKey.CAT_RECITATION),
-        StationCategory.RUQYAH to appString(StringKey.CAT_RUQYAH),
-        StationCategory.SEERAH_AND_STORIES to appString(StringKey.CAT_SEERAH_AND_STORIES),
-        StationCategory.TRANSLATION to appString(StringKey.CAT_TRANSLATION),
-        StationCategory.RECITER to appString(StringKey.CAT_RECITER)
-    )
-
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -426,7 +412,7 @@ fun HomeScreen(
         }
 
         // 1.5 Islamic Seasonal Smart Banners (Ramadan / Hajj)
-        if (searchQuery.isBlank() && selectedCategory == null) {
+        if (selectedCategory == null) {
             if (seasonState != null) {
                 if (seasonState.isRamadanActive && seasonState.ramadanBannerEnabled) {
                     item {
@@ -460,7 +446,7 @@ fun HomeScreen(
         }
 
         // 1.6 Smart Context Recommendation Card (Adapts to Dawn, Day, Friday, Evening, Night)
-        if (searchQuery.isBlank() && selectedCategory == null) {
+        if (selectedCategory == null) {
             val smartContext = smartContextRecommendation
             if (smartContext != null && smartContext.currentStation != null) {
                 item {
@@ -484,7 +470,7 @@ fun HomeScreen(
 
 
         // 3. Quick Favorites Carousel
-        if (searchQuery.isBlank() && selectedCategory == null && favoriteStations.isNotEmpty()) {
+        if (selectedCategory == null && favoriteStations.isNotEmpty()) {
             item {
                 Row(
                     modifier = Modifier
@@ -610,7 +596,7 @@ fun HomeScreen(
         }
 
         // 4. Quick Nav Discovery Cards (Countries & Reciters)
-        if (searchQuery.isBlank() && selectedCategory == null) {
+        if (selectedCategory == null) {
             item {
                 Row(
                     modifier = Modifier
