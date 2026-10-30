@@ -229,6 +229,9 @@ fun QuranRadioApp(
                     onNavigateToGroupKhatma = {
                         navController.navigate(Screen.GroupKhatma.route) { launchSingleTop = true }
                     },
+                    onNavigateToSettings = {
+                        navController.navigate(Screen.Settings.route) { launchSingleTop = true }
+                    },
                     modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
                 )
             }
