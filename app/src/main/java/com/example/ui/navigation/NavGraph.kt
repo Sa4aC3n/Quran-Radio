@@ -220,6 +220,15 @@ fun QuranRadioApp(
                     onNavigateToFavorites = {
                         navController.navigate(Screen.Favorites.route)
                     },
+                    onNavigateToPrayer = {
+                        navController.navigate(Screen.Prayer.route) { launchSingleTop = true }
+                    },
+                    onNavigateToQibla = {
+                        navController.navigate(Screen.Qibla.route) { launchSingleTop = true }
+                    },
+                    onNavigateToGroupKhatma = {
+                        navController.navigate(Screen.GroupKhatma.route) { launchSingleTop = true }
+                    },
                     modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
                 )
             }
