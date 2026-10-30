@@ -61,6 +61,7 @@ import com.example.viewmodel.GroupKhatmaViewModel
 import com.example.viewmodel.PersonalKhatmaViewModel
 import com.example.viewmodel.PrayerViewModel
 import com.example.viewmodel.RadioViewModel
+import kotlinx.coroutines.flow.first
 
 @Composable
 fun QuranRadioApp(
@@ -205,7 +206,7 @@ fun QuranRadioApp(
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Splash.route,
+            startDestination = if (initialStationId.isNullOrBlank()) Screen.Splash.route else Screen.FullPlayer.route,
             modifier = Modifier.fillMaxSize()
         ) {
             // Splash Screen
