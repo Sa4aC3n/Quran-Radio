@@ -53,7 +53,7 @@ val stringsAr: Map<StringKey, String> = mapOf(
     StringKey.COUNTRY_DETAIL_STATIONS_TITLE to "إذاعات",
     StringKey.COUNTRY_DETAIL_NO_STATIONS to "لا توجد إذاعات متاحة لهذه الدولة حالياً",
 
-    StringKey.RECITERS_TITLE to "كبار القراء",
+    StringKey.RECITERS_TITLE to "إذاعات القرآن الكريم",
     StringKey.RECITERS_SEARCH_HINT to "ابحث عن اسم القارئ...",
     StringKey.RECITERS_NO_RESULTS to "لم يتم العثور على قراء بهذا الاسم",
     StringKey.RECITERS_AVAILABLE_COUNT to "قارئ معتمد في المكتبة",

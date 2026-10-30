@@ -48,6 +48,10 @@ import com.example.localization.LocalAppLanguage
 import com.example.localization.localizedName
 import com.example.model.PlaybackStatus
 import com.example.model.RadioStation
+import com.example.model.StationCategory
+import com.example.localization.StringKey
+import com.example.localization.appString
+import com.example.localization.localizedTitle
 import com.example.ui.components.StationCard
 import com.example.ui.theme.PureWhite
 import com.example.ui.theme.SkyBluePrimary
@@ -66,6 +70,21 @@ fun RecitersScreen(
     val currentLanguage = LocalAppLanguage.current
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("الكل") }
+    var selectedCategory by remember { mutableStateOf<StationCategory?>(null) }
+
+    val categories: List<Pair<StationCategory?, String>> = listOf(
+        null to appString(StringKey.CAT_ALL),
+        StationCategory.OFFICIAL to appString(StringKey.CAT_OFFICIAL),
+        StationCategory.TAFSIR to appString(StringKey.CAT_TAFSIR),
+        StationCategory.SUNNAH to appString(StringKey.CAT_SUNNAH),
+        StationCategory.FATWA to appString(StringKey.CAT_FATWA),
+        StationCategory.ADHKAR to appString(StringKey.CAT_ADHKAR),
+        StationCategory.RECITATION to appString(StringKey.CAT_RECITATION),
+        StationCategory.RUQYAH to appString(StringKey.CAT_RUQYAH),
+        StationCategory.SEERAH_AND_STORIES to appString(StringKey.CAT_SEERAH_AND_STORIES),
+        StationCategory.TRANSLATION to appString(StringKey.CAT_TRANSLATION),
+        StationCategory.RECITER to appString(StringKey.CAT_RECITER)
+    )
 
     val filters = listOf("مرتل", "مجود", "أئمة الحرمين", "الكل")
     val recitersById = remember(reciters) { reciters.associateBy { it.id } }
@@ -80,6 +99,12 @@ fun RecitersScreen(
             station.country.contains(query, ignoreCase = true) ||
             station.city.contains(query, ignoreCase = true) ||
             station.reciter?.contains(query, ignoreCase = true) == true
+        val matchesCategory = selectedCategory == null ||
+            station.category == selectedCategory ||
+            (selectedCategory == StationCategory.TAFSIR && station.category == StationCategory.TAFSEER) ||
+            (selectedCategory == StationCategory.SEERAH_AND_STORIES && station.category == StationCategory.SEERAH) ||
+            (selectedCategory == StationCategory.RUQYAH && station.category == StationCategory.ROQIAH) ||
+            (selectedCategory == StationCategory.FATWA && station.category == StationCategory.FATAWA)
         val reciter = station.reciterId?.let { recitersById[it] }
         val matchesFilter = when (selectedFilter) {
             "مرتل" -> reciter?.styleAr?.contains("مرتل", ignoreCase = true) == true
@@ -96,7 +121,7 @@ fun RecitersScreen(
             }
             else -> true
         }
-        matchesSearch && matchesFilter
+        matchesSearch && matchesFilter && matchesCategory
     }
 
     Scaffold(
@@ -177,6 +202,25 @@ fun RecitersScreen(
                                 elevation = FilterChipDefaults.filterChipElevation(
                                     elevation = if (selected) 2.dp else 0.5.dp
                                 )
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(categories) { (category, label) ->
+                            val selected = selectedCategory == category
+                            ElevatedFilterChip(
+                                selected = selected,
+                                onClick = { selectedCategory = category },
+                                label = { Text(label, style = MaterialTheme.typography.labelSmall) },
+                                shape = RoundedCornerShape(18.dp),
+                                colors = FilterChipDefaults.elevatedFilterChipColors(
+                                    selectedContainerColor = SkyBluePrimary,
+                                    selectedLabelColor = PureWhite,
+                                    containerColor = MaterialTheme.colorScheme.surface,
+                                    labelColor = MaterialTheme.colorScheme.onSurface
+                                ),
+                                border = if (selected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                             )
                         }
                     }
