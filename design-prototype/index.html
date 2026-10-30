@@ -67,11 +67,13 @@
     </main>
 
     <nav class="bottom-nav" aria-label="التنقل الرئيسي">
-      <button class="nav-item"><span class="icon" data-icon="book-open"></span><span>القرآن</span></button>
-      <button class="nav-item"><span class="icon" data-icon="radio"></span><span>الإذاعات</span></button>
-      <button class="nav-item active"><span class="icon" data-icon="home"></span><span>الرئيسية</span></button>
-      <button class="nav-item"><span class="icon" data-icon="heart"></span><span>المفضلة</span></button>
-      <button class="nav-item"><span class="icon" data-icon="more-horizontal"></span><span>المزيد</span></button>
+      <button class="nav-item active" type="button" data-route="home" aria-current="page"><span class="icon" data-icon="home"></span><span>الرئيسية</span></button>
+      <button class="nav-item" type="button" data-route="countries"><span class="icon" data-icon="globe"></span><span>الدول</span></button>
+      <button class="nav-item" type="button" data-route="reciters"><span class="icon" data-icon="reader"></span><span>القراء</span></button>
+      <button class="nav-item" type="button" data-route="khatma"><span class="icon" data-icon="quran"></span><span>الختمات</span></button>
+      <button class="nav-item" type="button" data-route="prayer"><span class="icon" data-icon="clock"></span><span>المواقيت</span></button>
+      <button class="nav-item" type="button" data-route="qibla"><span class="icon" data-icon="compass"></span><span>القبلة</span></button>
+      <button class="nav-item" type="button" data-route="settings"><span class="icon" data-icon="settings"></span><span>الإعدادات</span></button>
     </nav>
   </div>
   <script src="./app.js"></script>
