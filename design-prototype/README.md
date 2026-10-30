@@ -17,6 +17,8 @@ python -m http.server 8080
 
 Then open `http://localhost:8080/design-prototype/` if serving from the repository root, or `http://localhost:8080/` if serving from this directory.
 
+The GitHub Pages preview is deployed automatically when files under `design-prototype/` are updated on the prototype branch. No manual workflow selection is needed for normal updates. The workflow file is kept on this branch to preserve isolation from `main`.
+
 ## Files
 - `index.html` — isolated semantic layout
 - `styles.css` — responsive visual system, blue/sky-blue palette, card styles and responsive behavior
