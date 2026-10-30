@@ -121,7 +121,6 @@ fun HomeScreen(
 ) {
     val searchResults by viewModel.searchResults.collectAsState()
     val selectedCategory by viewModel.selectedCategory.collectAsState()
-    val favoriteStations by viewModel.favoriteStations.collectAsState()
     val countries by viewModel.countries.collectAsState()
     val reciters by viewModel.reciters.collectAsState()
     val playerState by viewModel.playerState.collectAsState()
@@ -366,7 +365,8 @@ fun HomeScreen(
                     onSeason = { isSeasonSettingsOpen = true },
                     onHaram = { isHaramDialogOpen = true },
                     onSleepTimer = { isSleepTimerOpen = true },
-                    onHaramain = { isHaramainCardVisible = !isHaramainCardVisible }
+                    onHaramain = { isHaramainCardVisible = !isHaramainCardVisible },
+                    onFavorites = onNavigateToFavorites
                 )
             }
         }
@@ -445,131 +445,6 @@ fun HomeScreen(
             }
         }
 
-
-        // 3. Quick Favorites Carousel
-        if (selectedCategory == null && favoriteStations.isNotEmpty()) {
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .clip(CircleShape)
-                                .background(LiveCoral)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = appString(StringKey.HOME_FAVORITES_TITLE),
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        )
-                    }
-                    TextButton(onClick = onNavigateToFavorites) {
-                        Text(
-                            text = appString(StringKey.HOME_VIEW_ALL),
-                            color = SkyBluePrimary,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-
-            item {
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(favoriteStations) { station ->
-                        val isPlaying = playerState.currentStation?.id == station.id && playerState.status == PlaybackStatus.PLAYING
-                        Surface(
-                            modifier = Modifier
-                                .width(165.dp)
-                                .clip(RoundedCornerShape(20.dp))
-                                .clickable {
-                                    if (playerState.currentStation?.id == station.id) {
-                                        viewModel.togglePlayPause()
-                                    } else {
-                                        viewModel.playStation(station)
-                                    }
-                                }
-                                .testTag("favorite_card_${station.id}"),
-                            shape = RoundedCornerShape(20.dp),
-                            color = MaterialTheme.colorScheme.surface,
-                            border = BorderStroke(1.dp, if (isPlaying) SkyBluePrimary else MaterialTheme.colorScheme.outline),
-                            shadowElevation = if (isPlaying) 3.dp else 1.dp
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(12.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(46.dp)
-                                        .clip(RoundedCornerShape(14.dp))
-                                        .background(if (isPlaying) SkyBluePrimary else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    if (station.logoUrl.isNotBlank()) {
-                                        AsyncImage(
-                                            model = station.logoUrl,
-                                            contentDescription = station.name,
-                                            modifier = Modifier
-                                                .size(28.dp)
-                                                .padding(1.dp),
-                                            contentScale = ContentScale.Fit
-                                        )
-                                    } else {
-                                        Icon(
-                                            imageVector = Icons.Default.Radio,
-                                            contentDescription = null,
-                                            tint = if (isPlaying) PureWhite else SkyBluePrimary,
-                                            modifier = Modifier.size(22.dp)
-                                        )
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                Text(
-                                    text = station.localizedName(currentLanguage),
-                                    style = MaterialTheme.typography.titleSmall.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        fontSize = 12.sp
-                                    ),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-
-                                Text(
-                                    text = if (station.reciter != null) {
-                                        StationTranslator.getReciterName(station.reciterId, station.reciter, "", currentLanguage)
-                                    } else {
-                                        StationTranslator.getCountryName(station.countryCode ?: "", station.country, "", currentLanguage)
-                                    },
-                                    style = MaterialTheme.typography.bodySmall.copy(
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontSize = 10.sp
-                                    ),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(14.dp))
-            }
-        }
 
         // 4. Quick Nav Discovery Cards (Countries & Reciters)
         if (selectedCategory == null) {
@@ -1071,14 +946,16 @@ private fun HomeQuickShortcuts(
     onSeason: () -> Unit,
     onHaram: () -> Unit,
     onSleepTimer: () -> Unit,
-    onHaramain: () -> Unit
+    onHaramain: () -> Unit,
+    onFavorites: () -> Unit
 ) {
     val shortcuts = listOf(
         Triple("اللغة", Icons.Default.Translate, onLanguage),
         Triple("رمضان والحج", Icons.Default.AutoAwesome, onSeason),
         Triple("بث الحرم", Icons.Default.Mosque, onHaram),
         Triple("مؤقت النوم", Icons.Default.AvTimer, onSleepTimer),
-        Triple("مكة والمدينة", Icons.Default.LiveTv, onHaramain)
+        Triple("مكة والمدينة", Icons.Default.LiveTv, onHaramain),
+        Triple("المفضلة", Icons.Default.Favorite, onFavorites)
     )
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Text(
