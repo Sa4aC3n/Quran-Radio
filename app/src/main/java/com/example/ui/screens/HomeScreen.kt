@@ -979,7 +979,7 @@ private fun CairoRadioHeroCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(188.dp)
+                .height(216.dp)
         ) {
             androidx.compose.foundation.Image(
                 painter = androidx.compose.ui.res.painterResource(com.example.R.drawable.cairo_nile_hero),
