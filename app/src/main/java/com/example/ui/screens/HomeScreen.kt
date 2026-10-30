@@ -135,8 +135,7 @@ fun HomeScreen(
     var isLanguageDialogOpen by remember { mutableStateOf(false) }
     var isSeasonSettingsOpen by remember { mutableStateOf(false) }
     var isHaramDialogOpen by remember { mutableStateOf(false) }
-    var isHaramainMenuExpanded by remember { mutableStateOf(false) }
-    var selectedHaramainChannel by remember { mutableStateOf<com.example.model.HaramainChannelId?>(null) }
+    var isHaramainCardVisible by remember { mutableStateOf(false) }
 
     LazyColumn(
         modifier = modifier
@@ -302,41 +301,20 @@ fun HomeScreen(
                                 targetValue = if (isTvPressed) 0.7f else 1.0f,
                                 label = "tv_btn_alpha"
                             )
-                            Box {
-                                IconButton(
-                                    onClick = { isHaramainMenuExpanded = true },
-                                    interactionSource = tvInteraction,
-                                    modifier = Modifier.size(32.dp).alpha(tvAlpha)
-                                        .testTag("home_haramain_tv_toggle_btn")
-                                ) {
-                                    Icon(
-                                        imageVector = if (selectedHaramainChannel != null) Icons.Filled.LiveTv else Icons.Outlined.LiveTv,
-                                        contentDescription = "البث المباشر للحرمين",
-                                        tint = if (selectedHaramainChannel != null) GoldAccent else SkyBluePrimary,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                                androidx.compose.material3.DropdownMenu(
-                                    expanded = isHaramainMenuExpanded,
-                                    onDismissRequest = { isHaramainMenuExpanded = false }
-                                ) {
-                                    androidx.compose.material3.DropdownMenuItem(
-                                        text = { Text("بث مباشر من مكة المكرمة 🕋") },
-                                        onClick = {
-                                            viewModel.stop()
-                                            selectedHaramainChannel = com.example.model.HaramainChannelId.MAKKAH
-                                            isHaramainMenuExpanded = false
-                                        }
-                                    )
-                                    androidx.compose.material3.DropdownMenuItem(
-                                        text = { Text("بث مباشر من المدينة المنورة 🕌") },
-                                        onClick = {
-                                            viewModel.stop()
-                                            selectedHaramainChannel = com.example.model.HaramainChannelId.MADINAH
-                                            isHaramainMenuExpanded = false
-                                        }
-                                    )
-                                }
+                            IconButton(
+                                onClick = { isHaramainCardVisible = !isHaramainCardVisible },
+                                interactionSource = tvInteraction,
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .alpha(tvAlpha)
+                                    .testTag("home_haramain_tv_toggle_btn")
+                            ) {
+                                Icon(
+                                    imageVector = if (isHaramainCardVisible) Icons.Filled.LiveTv else Icons.Outlined.LiveTv,
+                                    contentDescription = "البث المباشر للحرمين",
+                                    tint = if (isHaramainCardVisible) GoldAccent else SkyBluePrimary,
+                                    modifier = Modifier.size(20.dp)
+                                )
                             }
                         }
                     }
@@ -356,7 +334,6 @@ fun HomeScreen(
                         playerState.status == PlaybackStatus.PLAYING,
                     onPlay = {
                         if (cairoStation != null) {
-                            selectedHaramainChannel = null
                             if (playerState.currentStation?.id == cairoStation.id) {
                                 viewModel.togglePlayPause()
                             } else {
@@ -389,25 +366,25 @@ fun HomeScreen(
                     onSeason = { isSeasonSettingsOpen = true },
                     onHaram = { isHaramDialogOpen = true },
                     onSleepTimer = { isSleepTimerOpen = true },
-                    onHaramain = { isHaramainMenuExpanded = true }
+                    onHaramain = { isHaramainCardVisible = !isHaramainCardVisible }
                 )
             }
         }
 
-        // Start the selected Haramain stream after choosing a city from the popup menu.
+        // 1.4 Haramain Live TV Card (Animated Visibility - Hidden by default)
         item {
             AnimatedVisibility(
-                visible = selectedHaramainChannel != null,
+                visible = isHaramainCardVisible,
                 enter = fadeIn(tween(300)) + expandVertically(tween(350)),
                 exit = fadeOut(tween(250)) + shrinkVertically(tween(300))
             ) {
-                selectedHaramainChannel?.let { channel ->
-                    HaramainLiveCard(
-                        initialChannelId = channel,
-                        onStopRadio = { viewModel.stop() },
-                        onClose = { selectedHaramainChannel = null }
-                    )
-                }
+                HaramainLiveCard(
+                    onStopRadio = {
+                        if (playerState.status == PlaybackStatus.PLAYING) {
+                            viewModel.pause()
+                        }
+                    }
+                )
             }
         }
 
@@ -518,7 +495,6 @@ fun HomeScreen(
                                 .width(165.dp)
                                 .clip(RoundedCornerShape(20.dp))
                                 .clickable {
-                                    selectedHaramainChannel = null
                                     if (playerState.currentStation?.id == station.id) {
                                         viewModel.togglePlayPause()
                                     } else {
