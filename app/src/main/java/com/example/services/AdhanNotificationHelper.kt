@@ -343,9 +343,12 @@ object AdhanNotificationHelper {
 
         val deepLinkIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra("NAVIGATE_TO", reminder.targetDeepLink)
-            if (reminder.stationId != null) {
-                putExtra("STATION_ID", reminder.stationId)
+            if (!reminder.stationId.isNullOrBlank()) {
+                action = Intent.ACTION_VIEW
+                data = Uri.parse("quranradio://station/${Uri.encode(reminder.stationId)}")
+                putExtra("EXTRA_AUTO_PLAY_STATION_ID", reminder.stationId)
+            } else {
+                putExtra("NAVIGATE_TO", reminder.targetDeepLink)
             }
         }
 
