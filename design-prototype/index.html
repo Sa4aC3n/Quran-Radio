@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#278acb">
+  <title>إذاعات القرآن الكريم — نموذج الواجهة</title>
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <div><strong>إذاعات القرآن الكريم</strong><small>صوت القرآن.. يملأ حياتك نورًا</small></div>
+      </div>
+      <div class="header-actions">
+        <label class="searchbox"><span class="icon" data-icon="search"></span><input id="searchInput" type="search" placeholder="ابحث عن إذاعة أو قارئ..." aria-label="البحث"></label>
+        <button class="icon-button" aria-label="الإعدادات" title="الإعدادات"><span class="icon" data-icon="settings"></span></button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" aria-label="إذاعة القرآن الكريم من القاهرة">
+        <div class="hero-ornament"></div>
+        <div class="hero-scene" aria-hidden="true"><img src="./assets/cairo-nile-hero.jpg" alt=""></div>
+        <div class="hero-copy">
+          <span class="eyebrow"><span class="icon" data-icon="radio"></span> الإذاعة الرئيسية</span>
+          <div class="hero-title-row"><div class="hero-emblem" aria-hidden="true"></div><div><h1>إذاعة القرآن الكريم<br>من القاهرة</h1><p>الهيئة العامة للإذاعة والتلفزيون</p></div></div>
+          <div class="hero-controls"><button class="play-button" id="playButton" aria-label="تشغيل تجريبي"><span class="icon" data-icon="play"></span></button><div class="equalizer" aria-hidden="true"><i></i><i></i><i></i><i></i></div><span class="live-pill"><i></i><span id="liveLabel">جاهز للاستماع</span></span></div>
+          <small class="demo-note">نموذج بصري — غير متصل بالبث الفعلي</small>
+        </div>
+      </section>
+
+      <section class="category-grid" id="categoryGrid" aria-label="أقسام التطبيق"></section>
+
+      <section class="prayer-grid">
+        <article class="prayer-card prayer-times">
+          <div class="prayer-art" aria-hidden="true">☾</div><div class="prayer-content"><span class="prayer-icon"><span class="icon" data-icon="clock"></span></span><h2>مواقيت الصلاة</h2><p>وأذان الصلاة</p><button class="outline-button">اعرض المواقيت <span>‹</span></button></div>
+        </article>
+        <article class="prayer-card adhan-card">
+          <div class="prayer-art" aria-hidden="true">۞</div><div class="prayer-content"><span class="prayer-icon"><span class="icon" data-icon="bell"></span></span><h2>منبه الأذان</h2><p>لا تفوّت الصلاة أبدًا</p><button class="outline-button">إعداد المنبه <span>‹</span></button></div>
+        </article>
+      </section>
+
+      <section class="khatma-section">
+        <div class="section-heading"><h2><span class="icon" data-icon="book-open"></span> الختمات</h2><button class="text-button">عرض الكل ‹</button></div>
+        <div class="khatma-grid">
+          <article class="khatma-card khatma-group"><div class="khatma-illustration">۞</div><div><h3>ختمة جماعية</h3><p>مع مجموعة من القراء</p></div><span class="round-action">‹</span></article>
+          <article class="khatma-card khatma-personal"><div class="khatma-illustration"><span class="icon" data-icon="book-open"></span></div><div><h3>ختمة خاصة</h3><p>اختر القارئ والمدة التي تناسبك</p></div><span class="round-action">‹</span></article>
+        </div>
+      </section>
+
+      <section class="quick-section">
+        <div class="section-heading"><h2>اختصارات سريعة</h2><span class="section-caption">كل ما تحتاجه في مكان واحد</span></div>
+        <div class="quick-grid">
+          <button class="quick-item" type="button" aria-pressed="false"><span class="quick-icon" data-icon="languages"></span><strong>تغيير اللغة</strong><small>العربية <span class="tiny-chevron">⌄</span></small></button>
+          <button class="quick-item" type="button" aria-pressed="false"><span class="quick-icon" data-icon="settings"></span><strong>إعدادات</strong><small>رمضان والحج <span class="tiny-chevron">⌄</span></small></button>
+          <button class="quick-item" type="button" aria-pressed="false"><span class="quick-icon" data-icon="mosque"></span><strong>الآن يُقرأ في الحرم</strong><small>مباشر <i class="status-dot"></i></small></button>
+          <button class="quick-item" type="button" aria-pressed="false"><span class="quick-icon" data-icon="timer"></span><strong>مؤقت النوم</strong><small>إيقاف بعد 30 د</small></button>
+          <button class="quick-item" type="button" aria-pressed="false"><span class="quick-icon" data-icon="tv"></span><strong>بث مباشر</strong><small>مكة والمدينة <i class="status-dot live-dot"></i></small></button>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="التنقل الرئيسي">
+      <button class="nav-item active" type="button" data-route="home" aria-current="page"><span class="icon" data-icon="home"></span><span>الرئيسية</span></button>
+      <button class="nav-item" type="button" data-route="countries"><span class="icon" data-icon="globe"></span><span>الدول</span></button>
+      <button class="nav-item" type="button" data-route="reciters"><span class="icon" data-icon="reader"></span><span>القراء</span></button>
+      <button class="nav-item" type="button" data-route="khatma"><span class="icon" data-icon="quran"></span><span>الختمات</span></button>
+      <button class="nav-item" type="button" data-route="prayer"><span class="icon" data-icon="clock"></span><span>المواقيت</span></button>
+      <button class="nav-item" type="button" data-route="qibla"><span class="icon" data-icon="compass"></span><span>القبلة</span></button>
+      <button class="nav-item" type="button" data-route="settings"><span class="icon" data-icon="settings"></span><span>الإعدادات</span></button>
+    </nav>
+  </div>
+  <script src="./app.js"></script>
+</body>
+</html>
