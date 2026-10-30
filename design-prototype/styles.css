@@ -62,3 +62,27 @@
 @media(prefers-reduced-motion:reduce){
  *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}
 }
+
+/* High-fidelity artwork and decorative assets */
+.hero-scene{background:#9bd7f3;inset:0;width:66%;clip-path:polygon(0 0,100% 0,92% 100%,0 100%);z-index:0}
+.hero-scene img{display:block;width:100%;height:100%;object-fit:cover;object-position:center;filter:saturate(.93) contrast(.98)}
+.hero:after{z-index:1;background:linear-gradient(90deg,transparent 0%,#e9f8ff00 37%,#edfaffd9 60%,#eaf8ff 78%,#e8f7ff 100%)}
+.hero-ornament{z-index:2;inset:0 0 0 auto;width:26%;opacity:.23;background-image:url("./assets/islamic-geometric-pattern.svg");background-size:128px;background-repeat:repeat;mask-image:linear-gradient(90deg,transparent,#000 28%)}
+.hero-copy{z-index:3}
+.hero-emblem{width:62px;height:74px;flex:none;display:grid;place-items:center;font-size:0;background-image:url("./assets/islamic-geometric-pattern.svg");background-repeat:no-repeat;background-size:contain;background-position:center;filter:drop-shadow(0 2px 2px #187cb344)}
+.hero-emblem:after{content:"۞";font-size:56px;line-height:1;color:#1689c8;text-shadow:0 1px 0 white}
+.brand-mark{font-size:0;border:0;border-radius:0;width:43px;height:54px;background-image:url("./assets/islamic-geometric-pattern.svg");background-size:cover;background-position:center;position:relative;filter:none}
+.brand-mark:after{content:"۞";font-size:37px;color:white;line-height:1;filter:drop-shadow(0 2px 2px #00518b55)}
+.khatma-card{isolation:isolate}
+.khatma-card:before{content:"";position:absolute;inset:0;z-index:-1;opacity:.22;background-image:url("./assets/islamic-geometric-pattern.svg");background-size:110px;background-repeat:repeat}
+.category-icon{box-shadow:inset 0 1px 0 #fff9}
+.category-icon svg{filter:drop-shadow(0 1px 0 #ffffff80)}
+@media(max-width:680px){
+ .hero-scene{width:70%;clip-path:polygon(0 0,100% 0,91% 100%,0 100%)}
+ .hero:after{background:linear-gradient(90deg,#edfaff00 0%,#edfaff1a 28%,#edfaffd9 59%,#eaf8ff 80%)}
+ .hero-ornament{width:22%;background-size:88px}
+ .hero-emblem{width:38px;height:48px}
+ .hero-emblem:after{font-size:37px}
+ .brand-mark{width:30px;height:39px}
+ .brand-mark:after{font-size:29px}
+}
