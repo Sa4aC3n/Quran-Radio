@@ -86,3 +86,24 @@
  .brand-mark{width:30px;height:39px}
  .brand-mark:after{font-size:29px}
 }
+
+/* Applied reference artwork: logo, Cairo hero, prayer silhouette and Islamic motifs */
+.brand-mark{background-image:url("./assets/app-emblem.svg");background-size:contain;background-repeat:no-repeat;background-position:center}
+.brand-mark:after{content:none}
+.hero-emblem{background-image:url("./assets/app-emblem.svg");background-size:contain;background-repeat:no-repeat;background-position:center;color:#1689c8}
+.hero-emblem:after{content:none}
+.prayer-art{background-image:url("./assets/prayer-mosque-silhouette.svg");background-size:cover;background-position:center bottom;background-repeat:no-repeat;opacity:.92}
+.prayer-times .prayer-art{filter:saturate(1.25) contrast(1.08)}
+.adhan-card .prayer-art{opacity:.6;filter:grayscale(.08)}
+.khatma-illustration{background-image:url("./assets/islamic-geometric-pattern.svg");background-size:cover;background-position:center;background-repeat:no-repeat}
+.khatma-personal .khatma-illustration{background-image:none}
+.khatma-personal .khatma-illustration:before{content:"";position:absolute;inset:8px;background:linear-gradient(135deg,#fff,#d6effc);border-radius:50%;z-index:-1}
+.quick-item .quick-icon{background:radial-gradient(circle,#e3f5ff 0 58%,#d3edfb 59% 100%)}
+.quick-item.selected .quick-icon{background:linear-gradient(145deg,#168acb,#0866a6)}
+.hero-scene img{object-position:left center}
+@media(max-width:680px){
+ .hero-scene{width:72%}
+ .hero-copy{width:53%;margin-inline-start:auto}
+ .prayer-art{background-size:auto 100%}
+ .quick-item{min-width:0}
+}
