@@ -10,6 +10,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -32,6 +33,7 @@ import com.example.viewmodel.RadioViewModel
 class MainActivity : ComponentActivity() {
 
     private val viewModel: RadioViewModel by viewModels()
+    private val pendingStationId = mutableStateOf<String?>(null)
 
     private val requestNotificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -48,9 +50,7 @@ class MainActivity : ComponentActivity() {
 
         // Handle possible deep link station ID
         val deepLinkStationId = extractDeepLinkStationId(intent)
-        if (deepLinkStationId != null) {
-            handlePlayStationId(deepLinkStationId)
-        }
+        pendingStationId.value = deepLinkStationId
 
         // Handle possible deep link khatma
         handleKhatmaIntent(intent)
@@ -79,7 +79,7 @@ class MainActivity : ComponentActivity() {
                     Surface(modifier = Modifier.fillMaxSize()) {
                         QuranRadioApp(
                             viewModel = viewModel,
-                            initialStationId = deepLinkStationId
+                            initialStationId = pendingStationId.value
                         )
                     }
                 }
@@ -89,10 +89,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        val deepLinkStationId = extractDeepLinkStationId(intent)
-        if (deepLinkStationId != null) {
-            handlePlayStationId(deepLinkStationId)
-        }
+        setIntent(intent)
+        pendingStationId.value = extractDeepLinkStationId(intent)
         handleKhatmaIntent(intent)
     }
 
