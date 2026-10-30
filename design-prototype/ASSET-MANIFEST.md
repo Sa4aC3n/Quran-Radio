@@ -2,13 +2,13 @@
 
 | Asset | Current implementation | Final asset needed |
 |---|---|---|
-| App emblem | Temporary ornamental glyph | Official Quran Radio logo as transparent SVG/PNG |
-| Cairo radio hero | CSS-drawn illustrative skyline/mosque | Licensed high-resolution Cairo mosque/Nile photograph, wide crop |
-| Category icons (12) | Inline SVG paths | Custom consistent icon family, preferably SVG |
-| Prayer card artwork | CSS decorative shapes | Optional transparent mosque/minaret silhouette |
-| Khatma cards | Gradient cards and temporary glyphs | Quran/book photography or approved illustrations |
-| Shortcut icons (5) | Inline SVG paths | Same-weight custom icon family |
-| Bottom navigation (5) | Inline SVG paths | Same icon family, outline and active variants |
+| App emblem | `assets/app-emblem.svg` | Confirm official brand artwork and licensing before production integration |
+| Cairo radio hero | `assets/cairo-nile-hero.jpg` | Confirm image ownership/licensing and final crop before production integration |
+| Category icons (12) | Inline SVG paths in `app.js` | Review icon family against the original reference |
+| Prayer card artwork | `assets/prayer-mosque-silhouette.svg` | Confirm visual fit and production approval |
+| Khatma cards | Gradient cards with geometric motif | Approved Quran/book artwork if required by final reference |
+| Shortcut icons (5) | Inline SVG paths in `app.js` | Review icon family against the original reference |
+| Bottom navigation (5) | Inline SVG paths in `app.js` | Review icon family against the original reference |
 
 ## Asset constraints
 - Prefer SVG for interface icons; use transparent PNG/WebP for decorative art.
