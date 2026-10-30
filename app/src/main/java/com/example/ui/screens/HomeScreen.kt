@@ -116,6 +116,7 @@ fun HomeScreen(
     onNavigateToQibla: () -> Unit = {},
     onNavigateToGroupKhatma: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
+    onOpenCategory: (StationCategory) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val searchResults by viewModel.searchResults.collectAsState()
@@ -408,7 +409,7 @@ fun HomeScreen(
                     onCountries = onNavigateToCountries,
                     onReciters = onNavigateToReciters,
                     onQibla = onNavigateToQibla,
-                    onSelectCategory = { viewModel.selectCategory(it) }
+                    onOpenCategory = onOpenCategory
                 )
             }
             item {
@@ -969,18 +970,13 @@ private fun CairoRadioHeroCard(
     Surface(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
         shape = RoundedCornerShape(24.dp),
-        color = Color(0xFFE8F6FD),
+        color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, Color(0xFFCAE7F5)),
         shadowElevation = 3.dp
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    Brush.horizontalGradient(
-                        listOf(Color(0xFFB8E4F7), Color(0xFFE9F7FD), Color(0xFFF8FCFF))
-                    )
-                )
                 .padding(18.dp)
         ) {
             androidx.compose.foundation.Image(
@@ -992,12 +988,12 @@ private fun CairoRadioHeroCard(
             Box(
                 modifier = Modifier.matchParentSize().background(
                     Brush.horizontalGradient(
-                        listOf(Color(0xE6E8F6FD), Color(0xD9E9F7FD), Color(0xCFF8FCFF))
+                        listOf(Color.Transparent, Color(0x22FFFFFF), Color(0xBFFFFFFF), Color(0xF2FFFFFF))
                     )
                 )
             )
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(0.76f).align(Alignment.CenterEnd),
                 horizontalAlignment = Alignment.End
             ) {
                 Surface(
@@ -1085,20 +1081,20 @@ private fun HomeCategoryGrid(
     onCountries: () -> Unit,
     onReciters: () -> Unit,
     onQibla: () -> Unit,
-    onSelectCategory: (StationCategory) -> Unit
+    onOpenCategory: (StationCategory) -> Unit
 ) {
     val actions = listOf(
         HomeCategoryAction("إذاعات الدول", Icons.Default.Public, onCountries),
         HomeCategoryAction("إذاعات القراء", Icons.Default.Mic, onReciters),
-        HomeCategoryAction("إذاعات رسمية", Icons.Default.Radio) { onSelectCategory(StationCategory.OFFICIAL) },
-        HomeCategoryAction("تلاوات خاشعة", Icons.Default.AutoStories) { onSelectCategory(StationCategory.RECITATION) },
-        HomeCategoryAction("تفسير القرآن", Icons.Default.MenuBook) { onSelectCategory(StationCategory.TAFSIR) },
-        HomeCategoryAction("ترجمات المعاني", Icons.Default.Translate) { onSelectCategory(StationCategory.TRANSLATION) },
-        HomeCategoryAction("السنة النبوية", Icons.Default.AccountBalance) { onSelectCategory(StationCategory.SUNNAH) },
-        HomeCategoryAction("السيرة والقصص", Icons.Default.Mosque) { onSelectCategory(StationCategory.SEERAH_AND_STORIES) },
-        HomeCategoryAction("الفتاوى والأحكام", Icons.Default.Balance) { onSelectCategory(StationCategory.FATWA) },
-        HomeCategoryAction("أذكار الصباح والمساء", Icons.Default.WbSunny) { onSelectCategory(StationCategory.ADHKAR) },
-        HomeCategoryAction("الرقية الشرعية", Icons.Default.Spa) { onSelectCategory(StationCategory.RUQYAH) },
+        HomeCategoryAction("إذاعات رسمية", Icons.Default.Radio) { onOpenCategory(StationCategory.OFFICIAL) },
+        HomeCategoryAction("تلاوات خاشعة", Icons.Default.AutoStories) { onOpenCategory(StationCategory.RECITATION) },
+        HomeCategoryAction("تفسير القرآن", Icons.Default.MenuBook) { onOpenCategory(StationCategory.TAFSIR) },
+        HomeCategoryAction("ترجمات المعاني", Icons.Default.Translate) { onOpenCategory(StationCategory.TRANSLATION) },
+        HomeCategoryAction("السنة النبوية", Icons.Default.AccountBalance) { onOpenCategory(StationCategory.SUNNAH) },
+        HomeCategoryAction("السيرة والقصص", Icons.Default.Mosque) { onOpenCategory(StationCategory.SEERAH_AND_STORIES) },
+        HomeCategoryAction("الفتاوى والأحكام", Icons.Default.Balance) { onOpenCategory(StationCategory.FATWA) },
+        HomeCategoryAction("أذكار الصباح والمساء", Icons.Default.WbSunny) { onOpenCategory(StationCategory.ADHKAR) },
+        HomeCategoryAction("الرقية الشرعية", Icons.Default.Spa) { onOpenCategory(StationCategory.RUQYAH) },
         HomeCategoryAction("القبلة", Icons.Default.Explore, onQibla)
     )
     Column(
@@ -1170,20 +1166,30 @@ private fun HomePrayerCards(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(9.dp)
     ) {
+        Text(
+            text = "ركن الصلاة",
+            color = MaterialTheme.colorScheme.onSurface,
+            fontSize = 17.sp,
+            fontWeight = FontWeight.ExtraBold
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
         HomeFeatureActionCard(
             title = "مواقيت الصلاة",
             subtitle = "تابع مواقيت الصلاة حسب موقعك",
             icon = Icons.Default.AccessTime,
             dark = true,
-            onClick = onPrayerTimes
+            onClick = onPrayerTimes,
+            modifier = Modifier.weight(1f)
         )
         HomeFeatureActionCard(
             title = "منبه الأذان",
             subtitle = "إعدادات التنبيه ومتابعة الصلاة",
             icon = Icons.Default.NotificationsActive,
             dark = false,
-            onClick = onAdhanSettings
+            onClick = onAdhanSettings,
+            modifier = Modifier.weight(1f)
         )
+        }
     }
 }
 
@@ -1193,27 +1199,26 @@ private fun HomeFeatureActionCard(
     subtitle: String,
     icon: ImageVector,
     dark: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val foreground = if (dark) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimaryContainer
     Surface(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.height(132.dp),
         shape = RoundedCornerShape(17.dp),
         color = if (dark) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primaryContainer,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         shadowElevation = 2.dp
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(15.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+        Column(
+            modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceEvenly
         ) {
-            Icon(icon, contentDescription = null, tint = foreground, modifier = Modifier.size(34.dp))
-            Column(horizontalAlignment = Alignment.End) {
-                Text(title, color = foreground, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold)
-                Text(subtitle, color = foreground.copy(alpha = .82f), fontSize = 11.sp)
-            }
+            Icon(icon, contentDescription = null, tint = foreground, modifier = Modifier.size(30.dp))
+            Text(title, color = foreground, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            Text(subtitle, color = foreground.copy(alpha = .82f), fontSize = 9.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center, maxLines = 2)
         }
     }
 }
