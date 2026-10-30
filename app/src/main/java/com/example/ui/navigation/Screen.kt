@@ -22,6 +22,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 sealed class Screen(val route: String) {
     object Splash : Screen("splash")
     object Home : Screen("home")
+    object CategoryStations : Screen("category/{category}") {
+        fun createRoute(category: com.example.model.StationCategory) = "category/${category.name}"
+    }
     object Prayer : Screen("prayer")
     object Qibla : Screen("qibla")
     object Countries : Screen("countries")
