@@ -72,7 +72,7 @@ object DefaultStationsData {
             city = "القاهرة",
             category = StationCategory.OFFICIAL,
             streamUrl = "https://service.webvideocore.net/CL1olYogIrDWvwqiIKK7eCxOS4PStqG9DuEjAr2ZjZQtvS3d4y9r0cvRhvS17SGN/a_7a4vuubc6mo8.m3u8",
-            fallbackStreamUrl = "https://stream.zeno.fm/0r0xa792kwzuv",
+            fallbackStreamUrl = "https://stream.radiojar.com/8s5u5tpdtwzuv",
             logoUrl = "https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=400&q=80",
             description = "البث المباشر الرسمي لإذاعة القرآن الكريم من القاهرة - جمهورية مصر العربية، أقدم وأعرق إذاعة قرآنية في العالم.",
             bitrate = "128 kbps",

@@ -3,6 +3,13 @@ package com.example.ui.components
 import android.app.Activity
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.content.res.Configuration
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.window.DialogWindowProvider
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import android.util.Log
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -38,7 +45,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CropFree
+import androidx.compose.material.icons.filled.FitScreen
 import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.material.icons.filled.CropFree
+import androidx.compose.material.icons.filled.FitScreen
 import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -128,6 +139,20 @@ fun HaramainLiveCard(
     var activeChannel by remember { mutableStateOf<HaramainLiveChannel?>(null) }
     var isFullWidth by remember { mutableStateOf(false) }
     var isFullScreen by remember { mutableStateOf(false) }
+
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    // Automatically trigger fullscreen landscape when user rotates phone to landscape while live stream is open
+    LaunchedEffect(isLandscape, activeChannel) {
+        if (activeChannel != null) {
+            if (isLandscape && !isFullScreen) {
+                isFullScreen = true
+            } else if (!isLandscape && isFullScreen) {
+                isFullScreen = false
+            }
+        }
+    }
 
     val horizontalPadding by animateDpAsState(
         targetValue = if (isFullWidth && activeChannel != null) 0.dp else 16.dp,
@@ -385,6 +410,7 @@ private fun HaramainEmbeddedPlayer(
     var playerUiState by remember { mutableStateOf(HaramainPlayerUiState.CONNECTING) }
     var isPlaying by remember { mutableStateOf(true) }
     var isMuted by remember { mutableStateOf(false) }
+    var resizeMode by remember { mutableIntStateOf(AspectRatioFrameLayout.RESIZE_MODE_ZOOM) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var currentStreamIndex by remember { mutableIntStateOf(0) }
     var retryAttempt by remember { mutableIntStateOf(0) }
@@ -929,6 +955,7 @@ private fun HaramainFullScreenDialog(
 
     var isPlaying by remember { mutableStateOf(true) }
     var isMuted by remember { mutableStateOf(false) }
+    var resizeMode by remember { mutableIntStateOf(AspectRatioFrameLayout.RESIZE_MODE_ZOOM) }
     var playerUiState by remember { mutableStateOf(HaramainPlayerUiState.CONNECTING) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var currentStreamIndex by remember { mutableIntStateOf(0) }
@@ -1053,6 +1080,19 @@ private fun HaramainFullScreenDialog(
             dismissOnClickOutside = false
         )
     ) {
+        val dialogView = LocalView.current
+        DisposableEffect(dialogView) {
+            val window = (dialogView.parent as? DialogWindowProvider)?.window
+                ?: (dialogView.rootView as? DialogWindowProvider)?.window
+            if (window != null) {
+                WindowCompat.setDecorFitsSystemWindows(window, false)
+                val insetsController = WindowCompat.getInsetsController(window, window.decorView)
+                insetsController.hide(WindowInsetsCompat.Type.systemBars())
+                insetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+            onDispose {}
+        }
+
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
             Box(
                 modifier = Modifier
@@ -1065,7 +1105,7 @@ private fun HaramainFullScreenDialog(
                         PlayerView(ctx).apply {
                             player = exoPlayer
                             useController = false
-                            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+                            this.resizeMode = resizeMode
                             setShutterBackgroundColor(android.graphics.Color.BLACK)
                             layoutParams = FrameLayout.LayoutParams(
                                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -1074,6 +1114,7 @@ private fun HaramainFullScreenDialog(
                         }
                     },
                     update = { view ->
+                        view.resizeMode = resizeMode
                         view.player = exoPlayer
                     },
                     modifier = Modifier.fillMaxSize()
@@ -1105,6 +1146,24 @@ private fun HaramainFullScreenDialog(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        // Toggle Aspect Ratio (Fit vs Zoom/Stretch)
+                        IconButton(
+                            onClick = {
+                                resizeMode = if (resizeMode == AspectRatioFrameLayout.RESIZE_MODE_ZOOM) {
+                                    AspectRatioFrameLayout.RESIZE_MODE_FIT
+                                } else {
+                                    AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                                }
+                            },
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (resizeMode == AspectRatioFrameLayout.RESIZE_MODE_ZOOM) Icons.Default.FitScreen else Icons.Default.CropFree,
+                                contentDescription = if (resizeMode == AspectRatioFrameLayout.RESIZE_MODE_ZOOM) "ملاءمة الشاشة" else "تمديد الشاشة بالكامل",
+                                tint = PureWhite
+                            )
+                        }
+
                         // Switch channel
                         IconButton(
                             onClick = onSwitchChannel,

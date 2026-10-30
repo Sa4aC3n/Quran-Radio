@@ -21,9 +21,7 @@ class MultiStreamFailoverEngine {
      */
     private val officialMirrors = mapOf(
         "cairo_quran" to listOf(
-            "https://stream.radiojar.com/8s5u8tpdtwzuv",
-            "http://stream.zeno.fm/0r0xa792kwzuv",
-            "https://qurango.net/radio/cairo"
+            "https://stream.radiojar.com/8s5u5tpdtwzuv"
         ),
         "haram_makkah_live" to listOf(
             "https://qurango.net/radio/makkah",
