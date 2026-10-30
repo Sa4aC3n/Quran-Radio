@@ -520,7 +520,9 @@ fun HomeScreen(
                     val isSelected = selectedCategory == category
                     ElevatedFilterChip(
                         selected = isSelected,
-                        onClick = { viewModel.selectCategory(category) },
+                        onClick = {
+                            if (category == null) viewModel.selectCategory(null) else onOpenCategory(category)
+                        },
                         label = {
                             Text(
                                 text = label,
