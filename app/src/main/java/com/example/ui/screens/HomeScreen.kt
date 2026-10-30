@@ -879,8 +879,6 @@ private fun HomeCategoryGrid(
     onOpenCategory: (StationCategory) -> Unit
 ) {
     val actions = listOf(
-        HomeCategoryAction("إذاعات الدول", Icons.Default.Public, onCountries),
-        HomeCategoryAction("إذاعات القراء", Icons.Default.Mic, onReciters),
         HomeCategoryAction("إذاعات رسمية", Icons.Default.Radio) { onOpenCategory(StationCategory.OFFICIAL) },
         HomeCategoryAction("تلاوات خاشعة", Icons.Default.AutoStories) { onOpenCategory(StationCategory.RECITATION) },
         HomeCategoryAction("تفسير القرآن", Icons.Default.MenuBook) { onOpenCategory(StationCategory.TAFSIR) },
