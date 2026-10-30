@@ -115,6 +115,7 @@ fun HomeScreen(
     onNavigateToPrayer: () -> Unit = {},
     onNavigateToQibla: () -> Unit = {},
     onNavigateToGroupKhatma: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val searchResults by viewModel.searchResults.collectAsState()
@@ -203,6 +204,18 @@ fun HomeScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(0.dp)
                         ) {
+                            IconButton(
+                                onClick = onNavigateToSettings,
+                                modifier = Modifier.size(32.dp).testTag("home_settings_btn")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = "الإعدادات",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(19.dp)
+                                )
+                            }
+
                             // 1. Language Selector Quick Button (Transparent, opacity 0.7 on press)
                             val langInteraction = remember { MutableInteractionSource() }
                             val isLangPressed by langInteraction.collectIsPressedAsState()
@@ -1110,7 +1123,7 @@ private fun HomeCategoryGrid(
                         modifier = Modifier.weight(1f).height(106.dp),
                         shape = RoundedCornerShape(16.dp),
                         color = MaterialTheme.colorScheme.surface,
-                        border = BorderStroke(1.dp, Color(0xFFD8EAF4)),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                         shadowElevation = 1.dp
                     ) {
                         Column(
@@ -1120,13 +1133,13 @@ private fun HomeCategoryGrid(
                         ) {
                             Box(
                                 modifier = Modifier.size(39.dp).clip(CircleShape)
-                                    .background(Color(0xFFE5F4FC)),
+                                    .background(MaterialTheme.colorScheme.primaryContainer),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = action.icon,
                                     contentDescription = null,
-                                    tint = Color(0xFF1684BE),
+                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(22.dp)
                                 )
                             }
@@ -1182,13 +1195,13 @@ private fun HomeFeatureActionCard(
     dark: Boolean,
     onClick: () -> Unit
 ) {
-    val foreground = if (dark) Color.White else Color(0xFF174B76)
+    val foreground = if (dark) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimaryContainer
     Surface(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(17.dp),
-        color = if (dark) Color(0xFF247FB6) else Color(0xFFF0F8FC),
-        border = BorderStroke(1.dp, if (dark) Color(0xFF247FB6) else Color(0xFFD6EAF4)),
+        color = if (dark) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primaryContainer,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         shadowElevation = 2.dp
     ) {
         Row(
