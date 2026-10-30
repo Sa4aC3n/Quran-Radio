@@ -246,7 +246,7 @@ fun QuranRadioApp(
                 arguments = listOf(navArgument("category") { type = NavType.StringType })
             ) { backStackEntry ->
                 val categoryName = backStackEntry.arguments?.getString("category")
-                val category = com.example.model.StationCategory.entries.firstOrNull { it.name == categoryName }
+                val category = com.example.model.StationCategory.values().firstOrNull { it.name == categoryName }
                     ?: com.example.model.StationCategory.OFFICIAL
                 CategoryStationsScreen(
                     category = category,
