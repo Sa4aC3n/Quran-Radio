@@ -17,6 +17,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -74,6 +75,21 @@ fun QuranRadioApp(
     val currentRoute = navBackStackEntry?.destination?.route
     val playerState by viewModel.playerState.collectAsState()
     val currentLanguage by viewModel.appLanguage.collectAsState()
+
+    LaunchedEffect(initialStationId) {
+        val stationId = initialStationId?.takeIf { it.isNotBlank() } ?: return@LaunchedEffect
+        val station = viewModel.allStations.value.firstOrNull { it.id == stationId }
+            ?: viewModel.allStations.first { stations -> stations.isNotEmpty() }
+                .firstOrNull { it.id == stationId }
+        if (station != null) {
+            viewModel.playStation(station)
+            navController.navigate(Screen.FullPlayer.route) {
+                launchSingleTop = true
+            }
+        } else {
+            android.util.Log.w("QuranRadioApp", "Notification station not found: $stationId")
+        }
+    }
 
     // Show bottom bar and miniplayer on main bottom tab screens
     val isBottomBarVisible = when (currentRoute) {
