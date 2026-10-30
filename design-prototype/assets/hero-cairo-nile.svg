@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 430" preserveAspectRatio="xMidYMid slice">
+<defs>
+ <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#7bc7f0"/><stop offset=".48" stop-color="#d7effa"/><stop offset=".72" stop-color="#ffe1b2"/><stop offset="1" stop-color="#80c1d6"/></linearGradient>
+ <linearGradient id="stone" x2="1"><stop stop-color="#9b886e"/><stop offset=".42" stop-color="#f2d9ad"/><stop offset=".72" stop-color="#c7aa82"/><stop offset="1" stop-color="#8e7b68"/></linearGradient>
+ <linearGradient id="dome" x2="1"><stop stop-color="#877965"/><stop offset=".5" stop-color="#d6c5a5"/><stop offset="1" stop-color="#7e7465"/></linearGradient>
+ <linearGradient id="water" x2="0" y2="1"><stop stop-color="#559eb8"/><stop offset="1" stop-color="#146f9f"/></linearGradient>
+ <filter id="soft"><feGaussianBlur stdDeviation="16"/></filter>
+ <g id="minaret"><path fill="url(#stone)" d="M-15 0H15L12-12H8V-24L15-30 8-37V-49L0-67-8-49V-37L-15-30-8-24V-12H-12Z"/><path fill="#8d775d" d="M-9-28H9V-25H-9ZM-7-44H7V-41H-7ZM-4-56H4V-53H-4Z"/><path d="M0-70v-9" stroke="#7d6b55" stroke-width="2"/><path fill="#d7c3a0" d="M-15 0H15V5H-15Z"/></g>
+ <g id="domeShape"><path fill="url(#dome)" d="M-62 0C-61-41-39-70 0-78 39-70 61-41 62 0Z"/><path fill="#8d806c" d="M-62 0H62V8H-62Z"/><path d="M0-78v-19" stroke="#786c5c" stroke-width="3"/><path d="M-42-27Q0-58 42-27" fill="none" stroke="#e5d6ba" stroke-width="2" opacity=".7"/></g>
+</defs>
+<rect width="1200" height="430" fill="url(#sky)"/>
+<circle cx="560" cy="190" r="55" fill="#fff6d4" opacity=".8" filter="url(#soft)"/><circle cx="560" cy="190" r="22" fill="#fff7dc" opacity=".9"/>
+<!-- distant Cairo skyline -->
+<g fill="#779fb1" opacity=".72">
+ <path d="M0 286V226H18V205H25V226H37V242H58V195H71V286ZM85 286V233H100V180H106V233H120V286ZM136 286V220H157V202H165V220H178V286ZM194 286V190H204V164H213V190H227V286ZM250 286V220H270V193H278V220H292V286ZM310 286V177H324V151H333V177H346V286ZM365 286V221H385V188H393V221H411V286ZM430 286V205H450V168H458V205H476V286ZM494 286V224H513V196H521V224H539V286ZM594 286V222H612V182H621V222H640V286ZM661 286V190H675V158H685V190H698V286ZM721 286V218H742V190H751V218H770V286ZM800 286V205H820V176H829V205H849V286ZM875 286V224H892V194H902V224H918V286ZM948 286V200H965V171H975V200H993V286ZM1024 286V225H1040V189H1049V225H1065V286ZM1090 286V202H1105V177H1115V202H1133V286Z"/>
+ <path d="M210 286V155H234V286M460 286V145H480V286M760 286V169H784V286M1000 286V150H1022V286" fill="#5c8da6" opacity=".7"/>
+</g>
+<!-- river banks and Nile -->
+<path d="M0 287Q200 273 390 290T780 286T1200 278V430H0Z" fill="#72aaaf"/>
+<path d="M0 308Q180 295 360 312T760 304T1200 298V430H0Z" fill="url(#water)"/>
+<g stroke="#c6e8e8" stroke-width="2" opacity=".45"><path d="M0 334Q160 325 310 338T620 334T950 333T1200 327"/><path d="M0 366Q180 353 370 368T760 363T1200 359"/><path d="M0 398Q210 389 420 401T830 397T1200 393"/></g>
+<!-- mosque complex -->
+<g transform="translate(265 292)">
+ <path fill="#8f7b63" d="M-240 2H220V16H-240Z"/>
+ <path fill="url(#stone)" d="M-205 0V-77H-167V-108H-151V-77H-130V0H-93V-65H-63V0H-26V-58H15V0H70V-84H102V0H146V-64H184V0Z"/>
+ <g fill="#8e795f"><path d="M-200-77h28v8h-28zM-160-108h16v7h-16zM-91-65h26v8h-26zM-25-58h39v7h-39zM71-84h31v7H71zM148-64h34v7h-34z"/></g>
+ <g fill="#f6e1bc"><path d="M-190 0V-62Q-180-82-170-62V0ZM-82 0V-48Q-70-68-58-48V0ZM-16 0V-40Q-5-58 6-40V0ZM80 0V-68Q91-90 102-68V0ZM156 0V-46Q168-65 180-46V0Z"/></g>
+ <use href="#domeShape" transform="translate(-8 -5) scale(1.25)"/>
+ <use href="#minaret" transform="translate(-170 -4) scale(1.15)"/>
+ <use href="#minaret" transform="translate(-105 -4) scale(.86)"/>
+ <use href="#minaret" transform="translate(102 -4) scale(1.38)"/>
+ <path fill="#a58e6e" d="M-240 13H220V22H-240Z"/>
+</g>
+<!-- Nile felucca -->
+<g transform="translate(640 335)">
+ <path d="M-34 0H37L22 12H-20Z" fill="#4c5c60"/><path d="M-4-54V-2" stroke="#594e42" stroke-width="3"/><path d="M-2-51L-2-6 27-8Z" fill="#fff5d9" stroke="#bcae92" stroke-width="1"/><path d="M-7-45L-30-8-7-7Z" fill="#e9e0ca" stroke="#bcae92" stroke-width="1"/>
+</g>
+<!-- light haze -->
+<path d="M0 274Q220 247 430 274T850 263T1200 270V316Q950 299 700 316T230 309T0 317Z" fill="#fff3d8" opacity=".23"/>
+</svg>
