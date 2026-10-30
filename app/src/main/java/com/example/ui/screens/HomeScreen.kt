@@ -371,6 +371,53 @@ fun HomeScreen(
             }
         }
 
+        // Modern homepage sections: wired to the existing application actions.
+        if (searchQuery.isBlank() && selectedCategory == null) {
+            val cairoStation = searchResults.firstOrNull { it.id == "cairo_quran" }
+            item {
+                CairoRadioHeroCard(
+                    isPlaying = cairoStation != null &&
+                        playerState.currentStation?.id == cairoStation.id &&
+                        playerState.status == PlaybackStatus.PLAYING,
+                    onPlay = {
+                        if (cairoStation != null) {
+                            if (playerState.currentStation?.id == cairoStation.id) {
+                                viewModel.togglePlayPause()
+                            } else {
+                                viewModel.playStation(cairoStation)
+                            }
+                        }
+                    }
+                )
+            }
+            item {
+                HomeCategoryGrid(
+                    onCountries = onNavigateToCountries,
+                    onReciters = onNavigateToReciters,
+                    onQibla = onNavigateToQibla,
+                    onSelectCategory = { viewModel.selectCategory(it) }
+                )
+            }
+            item {
+                HomePrayerCards(
+                    onPrayerTimes = onNavigateToPrayer,
+                    onAdhanSettings = onNavigateToPrayer
+                )
+            }
+            item {
+                HomeKhatmaCards(onOpenKhatma = onNavigateToGroupKhatma)
+            }
+            item {
+                HomeQuickShortcuts(
+                    onLanguage = { isLanguageDialogOpen = true },
+                    onSeason = { isSeasonSettingsOpen = true },
+                    onHaram = { isHaramDialogOpen = true },
+                    onSleepTimer = { isSleepTimerOpen = true },
+                    onHaramain = { isHaramainCardVisible = !isHaramainCardVisible }
+                )
+            }
+        }
+
         // 1.4 Haramain Live TV Card (Animated Visibility - Hidden by default)
         item {
             AnimatedVisibility(
@@ -445,53 +492,6 @@ fun HomeScreen(
             }
         }
 
-
-        // Modern homepage sections: wired to the existing application actions.
-        if (searchQuery.isBlank() && selectedCategory == null) {
-            val cairoStation = searchResults.firstOrNull { it.id == "cairo_quran" }
-            item {
-                CairoRadioHeroCard(
-                    isPlaying = cairoStation != null &&
-                        playerState.currentStation?.id == cairoStation.id &&
-                        playerState.status == PlaybackStatus.PLAYING,
-                    onPlay = {
-                        if (cairoStation != null) {
-                            if (playerState.currentStation?.id == cairoStation.id) {
-                                viewModel.togglePlayPause()
-                            } else {
-                                viewModel.playStation(cairoStation)
-                            }
-                        }
-                    }
-                )
-            }
-            item {
-                HomeCategoryGrid(
-                    onCountries = onNavigateToCountries,
-                    onReciters = onNavigateToReciters,
-                    onQibla = onNavigateToQibla,
-                    onSelectCategory = { viewModel.selectCategory(it) }
-                )
-            }
-            item {
-                HomePrayerCards(
-                    onPrayerTimes = onNavigateToPrayer,
-                    onAdhanSettings = onNavigateToPrayer
-                )
-            }
-            item {
-                HomeKhatmaCards(onOpenKhatma = onNavigateToGroupKhatma)
-            }
-            item {
-                HomeQuickShortcuts(
-                    onLanguage = { isLanguageDialogOpen = true },
-                    onSeason = { isSeasonSettingsOpen = true },
-                    onHaram = { isHaramDialogOpen = true },
-                    onSleepTimer = { isSleepTimerOpen = true },
-                    onHaramain = { isHaramainCardVisible = !isHaramainCardVisible }
-                )
-            }
-        }
 
         // 2. Category Filter Chips (Pills)
         item {
