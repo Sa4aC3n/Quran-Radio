@@ -75,6 +75,7 @@ fun RecitersScreen(
     val categories: List<Pair<StationCategory?, String>> = listOf(
         null to appString(StringKey.CAT_ALL),
         StationCategory.OFFICIAL to appString(StringKey.CAT_OFFICIAL),
+        StationCategory.RECITER to appString(StringKey.CAT_RECITER),
         StationCategory.TAFSIR to appString(StringKey.CAT_TAFSIR),
         StationCategory.SUNNAH to appString(StringKey.CAT_SUNNAH),
         StationCategory.FATWA to appString(StringKey.CAT_FATWA),
@@ -82,8 +83,7 @@ fun RecitersScreen(
         StationCategory.RECITATION to appString(StringKey.CAT_RECITATION),
         StationCategory.RUQYAH to appString(StringKey.CAT_RUQYAH),
         StationCategory.SEERAH_AND_STORIES to appString(StringKey.CAT_SEERAH_AND_STORIES),
-        StationCategory.TRANSLATION to appString(StringKey.CAT_TRANSLATION),
-        StationCategory.RECITER to appString(StringKey.CAT_RECITER)
+        StationCategory.TRANSLATION to appString(StringKey.CAT_TRANSLATION)
     )
 
     val filters = listOf("مرتل", "مجود", "أئمة الحرمين", "الكل")
@@ -179,6 +179,27 @@ fun RecitersScreen(
                         singleLine = true
                     )
                     Spacer(Modifier.height(10.dp))
+                    // Main station categories first; reciter stations follow official stations.
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(categories) { (category, label) ->
+                            val selected = selectedCategory == category
+                            ElevatedFilterChip(
+                                selected = selected,
+                                onClick = { selectedCategory = category },
+                                label = { Text(label, style = MaterialTheme.typography.labelSmall) },
+                                shape = RoundedCornerShape(18.dp),
+                                colors = FilterChipDefaults.elevatedFilterChipColors(
+                                    selectedContainerColor = SkyBluePrimary,
+                                    selectedLabelColor = PureWhite,
+                                    containerColor = MaterialTheme.colorScheme.surface,
+                                    labelColor = MaterialTheme.colorScheme.onSurface
+                                ),
+                                border = if (selected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    // Recitation-style filters are displayed underneath the station categories.
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(filters) { filter ->
                             val selected = selectedFilter == filter
@@ -202,25 +223,6 @@ fun RecitersScreen(
                                 elevation = FilterChipDefaults.filterChipElevation(
                                     elevation = if (selected) 2.dp else 0.5.dp
                                 )
-                            )
-                        }
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(categories) { (category, label) ->
-                            val selected = selectedCategory == category
-                            ElevatedFilterChip(
-                                selected = selected,
-                                onClick = { selectedCategory = category },
-                                label = { Text(label, style = MaterialTheme.typography.labelSmall) },
-                                shape = RoundedCornerShape(18.dp),
-                                colors = FilterChipDefaults.elevatedFilterChipColors(
-                                    selectedContainerColor = SkyBluePrimary,
-                                    selectedLabelColor = PureWhite,
-                                    containerColor = MaterialTheme.colorScheme.surface,
-                                    labelColor = MaterialTheme.colorScheme.onSurface
-                                ),
-                                border = if (selected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                             )
                         }
                     }
