@@ -87,7 +87,7 @@ sealed class BottomNavItem(
     object Reciters : BottomNavItem(
         route = Screen.Reciters.route,
         stringKey = com.example.localization.StringKey.NAV_RECITERS,
-        titleAr = "القراء",
+        titleAr = "الإذاعات",
         selectedIcon = Icons.Filled.Mic,
         unselectedIcon = Icons.Outlined.Mic
     )

@@ -308,8 +308,9 @@ fun QuranRadioApp(
             composable(Screen.Reciters.route) {
                 RecitersScreen(
                     viewModel = viewModel,
-                    onReciterClick = { reciter ->
-                        navController.navigate(Screen.ReciterDetail.createRoute(reciter.id))
+                    onStationClick = { station ->
+                        viewModel.playStation(station)
+                        navController.navigate(Screen.FullPlayer.route)
                     },
                     modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
                 )

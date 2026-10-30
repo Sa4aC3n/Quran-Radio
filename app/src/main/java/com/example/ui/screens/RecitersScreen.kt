@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ElevatedFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.testTag
@@ -43,13 +45,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.localization.LocalAppLanguage
-import com.example.localization.StationTranslator
-import com.example.localization.StringKey
-import com.example.localization.appString
 import com.example.localization.localizedName
 import com.example.model.PlaybackStatus
-import com.example.model.Reciter
-import com.example.ui.components.ReciterCard
+import com.example.model.RadioStation
+import com.example.ui.components.StationCard
 import com.example.ui.theme.PureWhite
 import com.example.ui.theme.SkyBluePrimary
 import com.example.viewmodel.RadioViewModel
@@ -58,42 +57,46 @@ import com.example.viewmodel.RadioViewModel
 @Composable
 fun RecitersScreen(
     viewModel: RadioViewModel,
-    onReciterClick: (Reciter) -> Unit,
+    onStationClick: (RadioStation) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val stations by viewModel.allStations.collectAsState()
     val reciters by viewModel.reciters.collectAsState()
-    val allStations by viewModel.allStations.collectAsState()
     val playerState by viewModel.playerState.collectAsState()
-
+    val currentLanguage = LocalAppLanguage.current
     var searchQuery by remember { mutableStateOf("") }
-    var selectedStyleFilter by remember { mutableStateOf<String?>(null) }
+    var selectedFilter by remember { mutableStateOf("الكل") }
 
-    val styles = listOf(
-        null to appString(StringKey.CAT_ALL),
-        "مرتل" to appString(StringKey.RECITERS_STYLE_MURATTAL),
-        "مجود" to appString(StringKey.RECITERS_STYLE_MUJAWWAD),
-        "أئمة الحرمين" to appString(StringKey.RECITERS_STYLE_HARAMAIN)
-    )
+    val filters = listOf("مرتل", "مجود", "أئمة الحرمين", "الكل")
+    val recitersById = remember(reciters) { reciters.associateBy { it.id } }
 
-    val currentLang = LocalAppLanguage.current
-
-    val filteredReciters = reciters.filter { reciter ->
-        val localizedName = reciter.localizedName(currentLang)
-        val matchesSearch = searchQuery.isBlank() ||
-                localizedName.contains(searchQuery.trim(), ignoreCase = true) ||
-                reciter.nameAr.contains(searchQuery.trim(), ignoreCase = true) ||
-                reciter.nameEn.contains(searchQuery.trim(), ignoreCase = true)
-
-        val matchesStyle = when (selectedStyleFilter) {
-            null -> true
-            "أئمة الحرمين" -> reciter.styleAr.contains("الحرم") || 
-                    reciter.styleAr.contains("الحرمين") || 
-                    reciter.bioAr.contains("الحرم") || 
-                    reciter.bioAr.contains("المسجد الحرام") || 
-                    reciter.bioAr.contains("المسجد النبوي")
-            else -> reciter.styleAr.contains(selectedStyleFilter ?: "")
+    val filteredStations = stations.filter { station ->
+        val query = searchQuery.trim()
+        val matchesSearch = query.isBlank() ||
+            station.localizedName(currentLanguage).contains(query, ignoreCase = true) ||
+            station.name.contains(query, ignoreCase = true) ||
+            station.nameAr.contains(query, ignoreCase = true) ||
+            station.nameEn.contains(query, ignoreCase = true) ||
+            station.country.contains(query, ignoreCase = true) ||
+            station.city.contains(query, ignoreCase = true) ||
+            station.reciter?.contains(query, ignoreCase = true) == true
+        val reciter = station.reciterId?.let { recitersById[it] }
+        val matchesFilter = when (selectedFilter) {
+            "مرتل" -> reciter?.styleAr?.contains("مرتل", ignoreCase = true) == true
+            "مجود" -> reciter?.styleAr?.contains("مجود", ignoreCase = true) == true
+            "أئمة الحرمين" -> {
+                val placeMatch = station.countryCode.equals("SA", true) &&
+                    (station.city.contains("مكة") || station.city.contains("المدينة") ||
+                     station.name.contains("الحرم") || station.name.contains("المسجد النبوي"))
+                val reciterMatch = reciter?.let {
+                    it.styleAr.contains("الحرم") || it.bioAr.contains("الحرم") ||
+                        it.bioAr.contains("المسجد النبوي")
+                } == true
+                placeMatch || reciterMatch
+            }
+            else -> true
         }
-        matchesSearch && matchesStyle
+        matchesSearch && matchesFilter
     }
 
     Scaffold(
@@ -101,14 +104,13 @@ fun RecitersScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = appString(StringKey.RECITERS_TITLE),
+                        text = if (currentLanguage == com.example.localization.AppLanguage.AR)
+                            "الإذاعات" else "Radio Stations",
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
         },
         containerColor = MaterialTheme.colorScheme.background,
@@ -116,45 +118,27 @@ fun RecitersScreen(
         modifier = modifier
     ) { innerPadding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
+            modifier = Modifier.fillMaxSize()
                 .padding(top = innerPadding.calculateTopPadding())
-                .testTag("reciters_list"),
+                .testTag("radio_stations_list"),
             contentPadding = PaddingValues(bottom = 16.dp)
         ) {
-            // Search Bar & Filter Header
             item {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth()
                             .shadow(1.dp, RoundedCornerShape(18.dp))
-                            .testTag("reciters_search_input"),
+                            .testTag("radio_stations_search_input"),
                         placeholder = {
-                            Text(
-                                text = appString(StringKey.RECITERS_SEARCH_PLACEHOLDER),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                style = MaterialTheme.typography.bodyMedium
-                            )
+                            Text(if (currentLanguage == com.example.localization.AppLanguage.AR)
+                                "ابحث عن إذاعة أو قارئ أو دولة..." else "Search stations, reciters or countries...")
                         },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = appString(StringKey.SEARCH),
-                                tint = SkyBluePrimary
-                            )
-                        },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = SkyBluePrimary) },
                         trailingIcon = {
-                            if (searchQuery.isNotEmpty()) {
-                                IconButton(onClick = { searchQuery = "" }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Clear,
-                                        contentDescription = appString(StringKey.SEARCH_CLEAR),
-                                        tint = MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
+                            if (searchQuery.isNotEmpty()) IconButton(onClick = { searchQuery = "" }) {
+                                Icon(Icons.Default.Clear, contentDescription = "Clear search")
                             }
                         },
                         shape = RoundedCornerShape(18.dp),
@@ -169,26 +153,18 @@ fun RecitersScreen(
                         ),
                         singleLine = true
                     )
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Style Filter Chips
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(styles) { (style, label) ->
-                            val isSelected = selectedStyleFilter == style
+                    Spacer(Modifier.height(10.dp))
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(filters) { filter ->
+                            val selected = selectedFilter == filter
                             ElevatedFilterChip(
-                                selected = isSelected,
-                                onClick = { selectedStyleFilter = style },
+                                selected = selected,
+                                onClick = { selectedFilter = filter },
                                 label = {
-                                    Text(
-                                        text = label,
-                                        style = MaterialTheme.typography.labelMedium.copy(
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                            fontSize = 12.sp
-                                        )
-                                    )
+                                    Text(filter, style = MaterialTheme.typography.labelMedium.copy(
+                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                        fontSize = 12.sp
+                                    ))
                                 },
                                 shape = RoundedCornerShape(20.dp),
                                 colors = FilterChipDefaults.elevatedFilterChipColors(
@@ -197,43 +173,53 @@ fun RecitersScreen(
                                     containerColor = MaterialTheme.colorScheme.surface,
                                     labelColor = MaterialTheme.colorScheme.onSurface
                                 ),
-                                border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                                elevation = FilterChipDefaults.filterChipElevation(elevation = if (isSelected) 2.dp else 0.5.dp)
+                                border = if (selected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                                elevation = FilterChipDefaults.filterChipElevation(
+                                    elevation = if (selected) 2.dp else 0.5.dp
+                                )
+                            )
+                        }
+                    }
+                    Text(
+                        text = if (currentLanguage == com.example.localization.AppLanguage.AR)
+                            "عدد الإذاعات: ${filteredStations.size}" else "Stations: ${filteredStations.size}",
+                        modifier = Modifier.padding(top = 12.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            if (filteredStations.isEmpty()) {
+                item {
+                    Box(Modifier.fillMaxWidth().padding(40.dp), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(Icons.Default.Radio, contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                            Spacer(Modifier.height(12.dp))
+                            Text(
+                                if (currentLanguage == com.example.localization.AppLanguage.AR)
+                                    "لا توجد إذاعات مطابقة للبحث أو التصنيف"
+                                else "No stations match this search or filter",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                 }
-            }
-
-            // Reciters Items
-            items(filteredReciters, key = { it.id }) { reciter ->
-                val reciterStation = allStations.find { s ->
-                    s.reciterId == reciter.id ||
-                            (s.reciter != null && s.reciter.contains(reciter.nameAr, ignoreCase = true)) ||
-                            s.name.contains(reciter.nameAr, ignoreCase = true)
-                }
-                val isCurrentReciter = playerState.currentStation != null && (
-                        playerState.currentStation?.reciterId == reciter.id ||
-                                (reciterStation != null && playerState.currentStation?.id == reciterStation.id) ||
-                                (playerState.currentStation?.reciter?.contains(reciter.nameAr, ignoreCase = true) == true) ||
-                                (playerState.currentStation?.name?.contains(reciter.nameAr, ignoreCase = true) == true)
+            } else {
+                items(filteredStations, key = { it.id }) { station ->
+                    val isCurrent = playerState.currentStation?.id == station.id
+                    Box(Modifier.padding(horizontal = 16.dp, vertical = 5.dp)) {
+                        StationCard(
+                            station = station,
+                            isCurrentStation = isCurrent,
+                            playbackStatus = if (isCurrent) playerState.status else PlaybackStatus.IDLE,
+                            onStationClick = onStationClick,
+                            onPlayToggle = { selected ->
+                                if (isCurrent) viewModel.togglePlayPause() else viewModel.playStation(selected)
+                            },
+                            onToggleFavorite = { viewModel.toggleFavorite(it) }
                         )
-                val playbackStatus = if (isCurrentReciter) playerState.status else PlaybackStatus.IDLE
-
-                Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 5.dp)) {
-                    ReciterCard(
-                        reciter = reciter,
-                        isCurrentReciter = isCurrentReciter,
-                        playbackStatus = playbackStatus,
-                        onReciterClick = { onReciterClick(reciter) },
-                        onPlayReciterLive = {
-                            if (isCurrentReciter) {
-                                viewModel.togglePlayPause()
-                            } else if (reciterStation != null) {
-                                viewModel.playStation(reciterStation)
-                            }
-                        }
-                    )
+                    }
                 }
             }
         }

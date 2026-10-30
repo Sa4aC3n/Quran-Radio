@@ -129,7 +129,9 @@ private const val TAG = "HARAMAIN"
 @Composable
 fun HaramainLiveCard(
     modifier: Modifier = Modifier,
-    onStopRadio: () -> Unit = {}
+    initialChannelId: HaramainChannelId? = null,
+    onStopRadio: () -> Unit = {},
+    onClose: () -> Unit = {}
 ) {
     val repository = remember { HaramainStreamRepository() }
     val channels = remember { repository.getChannels() }
@@ -137,6 +139,13 @@ fun HaramainLiveCard(
     val madinahChannel = remember { repository.getChannel(HaramainChannelId.MADINAH) }
 
     var activeChannel by remember { mutableStateOf<HaramainLiveChannel?>(null) }
+
+    LaunchedEffect(initialChannelId) {
+        if (initialChannelId != null) {
+            onStopRadio()
+            activeChannel = repository.getChannel(initialChannelId)
+        }
+    }
     var isFullWidth by remember { mutableStateOf(false) }
     var isFullScreen by remember { mutableStateOf(false) }
 
@@ -219,6 +228,7 @@ fun HaramainLiveCard(
                     onClose = {
                         activeChannel = null
                         isFullWidth = false
+                        onClose()
                     },
                     onSwitchChannel = {
                         val next = if (current.id == HaramainChannelId.MAKKAH) madinahChannel else makkahChannel

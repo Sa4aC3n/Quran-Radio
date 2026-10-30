@@ -120,7 +120,6 @@ fun HomeScreen(
     modifier: Modifier = Modifier
 ) {
     val searchResults by viewModel.searchResults.collectAsState()
-    val searchQuery by viewModel.searchQuery.collectAsState()
     val selectedCategory by viewModel.selectedCategory.collectAsState()
     val favoriteStations by viewModel.favoriteStations.collectAsState()
     val countries by viewModel.countries.collectAsState()
@@ -136,7 +135,8 @@ fun HomeScreen(
     var isLanguageDialogOpen by remember { mutableStateOf(false) }
     var isSeasonSettingsOpen by remember { mutableStateOf(false) }
     var isHaramDialogOpen by remember { mutableStateOf(false) }
-    var isHaramainCardVisible by remember { mutableStateOf(false) }
+    var isHaramainMenuExpanded by remember { mutableStateOf(false) }
+    var selectedHaramainChannel by remember { mutableStateOf<com.example.model.HaramainChannelId?>(null) }
 
     val categories: List<Pair<StationCategory?, String>> = listOf(
         null to appString(StringKey.CAT_ALL),
@@ -316,77 +316,52 @@ fun HomeScreen(
                                 targetValue = if (isTvPressed) 0.7f else 1.0f,
                                 label = "tv_btn_alpha"
                             )
-                            IconButton(
-                                onClick = { isHaramainCardVisible = !isHaramainCardVisible },
-                                interactionSource = tvInteraction,
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .alpha(tvAlpha)
-                                    .testTag("home_haramain_tv_toggle_btn")
-                            ) {
-                                Icon(
-                                    imageVector = if (isHaramainCardVisible) Icons.Filled.LiveTv else Icons.Outlined.LiveTv,
-                                    contentDescription = "البث المباشر للحرمين",
-                                    tint = if (isHaramainCardVisible) GoldAccent else SkyBluePrimary,
-                                    modifier = Modifier.size(20.dp)
-                                )
+                            Box {
+                                IconButton(
+                                    onClick = { isHaramainMenuExpanded = true },
+                                    interactionSource = tvInteraction,
+                                    modifier = Modifier.size(32.dp).alpha(tvAlpha)
+                                        .testTag("home_haramain_tv_toggle_btn")
+                                ) {
+                                    Icon(
+                                        imageVector = if (selectedHaramainChannel != null) Icons.Filled.LiveTv else Icons.Outlined.LiveTv,
+                                        contentDescription = "البث المباشر للحرمين",
+                                        tint = if (selectedHaramainChannel != null) GoldAccent else SkyBluePrimary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                androidx.compose.material3.DropdownMenu(
+                                    expanded = isHaramainMenuExpanded,
+                                    onDismissRequest = { isHaramainMenuExpanded = false }
+                                ) {
+                                    androidx.compose.material3.DropdownMenuItem(
+                                        text = { Text("بث مباشر من مكة المكرمة 🕋") },
+                                        onClick = {
+                                            viewModel.stop()
+                                            selectedHaramainChannel = com.example.model.HaramainChannelId.MAKKAH
+                                            isHaramainMenuExpanded = false
+                                        }
+                                    )
+                                    androidx.compose.material3.DropdownMenuItem(
+                                        text = { Text("بث مباشر من المدينة المنورة 🕌") },
+                                        onClick = {
+                                            viewModel.stop()
+                                            selectedHaramainChannel = com.example.model.HaramainChannelId.MADINAH
+                                            isHaramainMenuExpanded = false
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(18.dp))
 
-                    // Search Field
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { viewModel.updateSearchQuery(it) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .shadow(2.dp, RoundedCornerShape(18.dp))
-                            .testTag("home_search_bar"),
-                        placeholder = {
-                            Text(
-                                text = appString(StringKey.HOME_SEARCH_PLACEHOLDER),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = appString(StringKey.SEARCH),
-                                tint = SkyBluePrimary
-                            )
-                        },
-                        trailingIcon = {
-                            if (searchQuery.isNotEmpty()) {
-                                IconButton(onClick = { viewModel.updateSearchQuery("") }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Clear,
-                                        contentDescription = appString(StringKey.SEARCH_CLEAR),
-                                        tint = MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
-                            }
-                        },
-                        shape = RoundedCornerShape(18.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surface,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                            focusedBorderColor = SkyBluePrimary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                            cursorColor = SkyBluePrimary
-                        ),
-                        singleLine = true
-                    )
                 }
             }
         }
 
         // Modern homepage sections: wired to the existing application actions.
-        if (searchQuery.isBlank() && selectedCategory == null) {
+        if (selectedCategory == null) {
             val cairoStation = searchResults.firstOrNull { it.id == "cairo_quran" }
             item {
                 CairoRadioHeroCard(
@@ -395,6 +370,7 @@ fun HomeScreen(
                         playerState.status == PlaybackStatus.PLAYING,
                     onPlay = {
                         if (cairoStation != null) {
+                            selectedHaramainChannel = null
                             if (playerState.currentStation?.id == cairoStation.id) {
                                 viewModel.togglePlayPause()
                             } else {
@@ -427,25 +403,25 @@ fun HomeScreen(
                     onSeason = { isSeasonSettingsOpen = true },
                     onHaram = { isHaramDialogOpen = true },
                     onSleepTimer = { isSleepTimerOpen = true },
-                    onHaramain = { isHaramainCardVisible = !isHaramainCardVisible }
+                    onHaramain = { isHaramainMenuExpanded = true }
                 )
             }
         }
 
-        // 1.4 Haramain Live TV Card (Animated Visibility - Hidden by default)
+        // Start the selected Haramain stream after choosing a city from the popup menu.
         item {
             AnimatedVisibility(
-                visible = isHaramainCardVisible,
+                visible = selectedHaramainChannel != null,
                 enter = fadeIn(tween(300)) + expandVertically(tween(350)),
                 exit = fadeOut(tween(250)) + shrinkVertically(tween(300))
             ) {
-                HaramainLiveCard(
-                    onStopRadio = {
-                        if (playerState.status == PlaybackStatus.PLAYING) {
-                            viewModel.pause()
-                        }
-                    }
-                )
+                selectedHaramainChannel?.let { channel ->
+                    HaramainLiveCard(
+                        initialChannelId = channel,
+                        onStopRadio = { viewModel.stop() },
+                        onClose = { selectedHaramainChannel = null }
+                    )
+                }
             }
         }
 
@@ -507,45 +483,6 @@ fun HomeScreen(
         }
 
 
-        // 2. Category Filter Chips (Pills)
-        item {
-            LazyRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 10.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(categories) { (category, label) ->
-                    val isSelected = selectedCategory == category
-                    ElevatedFilterChip(
-                        selected = isSelected,
-                        onClick = {
-                            if (category == null) viewModel.selectCategory(null) else onOpenCategory(category)
-                        },
-                        label = {
-                            Text(
-                                text = label,
-                                style = MaterialTheme.typography.labelMedium.copy(
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    fontSize = 12.sp
-                                )
-                            )
-                        },
-                        shape = RoundedCornerShape(20.dp),
-                        colors = FilterChipDefaults.elevatedFilterChipColors(
-                            selectedContainerColor = SkyBluePrimary,
-                            selectedLabelColor = PureWhite,
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            labelColor = MaterialTheme.colorScheme.onSurface
-                        ),
-                        border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                        elevation = FilterChipDefaults.filterChipElevation(elevation = if (isSelected) 3.dp else 0.5.dp)
-                    )
-                }
-            }
-        }
-
         // 3. Quick Favorites Carousel
         if (searchQuery.isBlank() && selectedCategory == null && favoriteStations.isNotEmpty()) {
             item {
@@ -595,6 +532,7 @@ fun HomeScreen(
                                 .width(165.dp)
                                 .clip(RoundedCornerShape(20.dp))
                                 .clickable {
+                                    selectedHaramainChannel = null
                                     if (playerState.currentStation?.id == station.id) {
                                         viewModel.togglePlayPause()
                                     } else {
@@ -786,117 +724,7 @@ fun HomeScreen(
             }
         }
 
-        // 5. Main Section Header (Live Now) & Add Station Button
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 18.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(LiveCoral)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    val headerTitle = when {
-                        searchQuery.isNotBlank() -> appString(StringKey.SEARCH_RESULTS_COUNT, searchResults.size)
-                        selectedCategory != null -> selectedCategory?.localizedTitle(currentLanguage) ?: appString(StringKey.CAT_ALL)
-                        else -> appString(StringKey.HOME_LIVE_NOW)
-                    }
-                    Text(
-                        text = headerTitle,
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    )
-                }
 
-                // Add Station pill button
-                Surface(
-                    onClick = { isAdminDialogOpen = true },
-                    shape = RoundedCornerShape(12.dp),
-                    color = SkyBluePrimary.copy(alpha = 0.12f),
-                    border = BorderStroke(1.dp, SkyBluePrimary.copy(alpha = 0.3f)),
-                    modifier = Modifier.testTag("home_add_station_section_btn")
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = null,
-                            tint = SkyBluePrimary,
-                            modifier = Modifier.size(15.dp)
-                        )
-                        Text(
-                            text = appString(StringKey.ADMIN_ADD_TITLE),
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = SkyBluePrimary,
-                                fontSize = 11.sp
-                            )
-                        )
-                    }
-                }
-            }
-        }
-
-        // 6. Stations List
-        if (searchResults.isEmpty()) {
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(40.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Default.Radio,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                            modifier = Modifier.size(48.dp)
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = appString(StringKey.SEARCH_NO_RESULTS),
-                            style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        )
-                    }
-                }
-            }
-        } else {
-            items(
-                items = searchResults,
-                key = { it.id }
-            ) { station ->
-                val isCurrent = playerState.currentStation?.id == station.id
-                Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 5.dp)) {
-                    StationCard(
-                        station = station,
-                        isCurrentStation = isCurrent,
-                        playbackStatus = playerState.status,
-                        onStationClick = { onNavigateToStationDetail(station) },
-                        onPlayToggle = {
-                            if (isCurrent) {
-                                viewModel.togglePlayPause()
-                            } else {
-                                viewModel.playStation(station)
-                            }
-                        },
-                        onToggleFavorite = { viewModel.toggleFavorite(it) }
-                    )
-                }
-            }
-        }
     }
 
     // Language Selector Dialog
