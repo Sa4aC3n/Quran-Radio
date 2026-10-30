@@ -62,11 +62,34 @@ playButton.addEventListener('click', () => {
   const icon = playButton.querySelector('[data-icon]');
   icon.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">'+(iconPaths[icon.dataset.icon]||iconPaths.play)+'</svg>';
 });
-document.querySelectorAll('.quick-item,.nav-item,.outline-button,.text-button,.category-card').forEach(button => {
-  button.addEventListener('click', () => {
-    if (button.classList.contains('nav-item')) {
-      document.querySelectorAll('.nav-item').forEach(item=>item.classList.remove('active'));
-      button.classList.add('active');
-    }
+
+/* Accessible selection feedback: preserve the original five navigation items and all 12 categories. */
+grid.addEventListener('click', event => {
+  const card = event.target.closest('.category-card');
+  if (!card) return;
+  grid.querySelectorAll('.category-card').forEach(item => {
+    const selected = item === card;
+    item.classList.toggle('selected', selected);
+    item.setAttribute('aria-pressed', String(selected));
+  });
+});
+document.querySelectorAll('.quick-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const selected = !item.classList.contains('selected');
+    document.querySelectorAll('.quick-item').forEach(other => {
+      other.classList.remove('selected');
+      other.setAttribute('aria-pressed','false');
+    });
+    item.classList.toggle('selected', selected);
+    item.setAttribute('aria-pressed', String(selected));
+  });
+});
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(other => {
+      const selected = other === item;
+      other.classList.toggle('active', selected);
+      other.setAttribute('aria-current', selected ? 'page' : 'false');
+    });
   });
 });
