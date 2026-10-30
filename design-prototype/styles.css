@@ -107,3 +107,23 @@
  .prayer-art{background-size:auto 100%}
  .quick-item{min-width:0}
 }
+
+
+/* Cairo photo refinement — keep the mosque and Nile visible in wide and narrow layouts. */
+.hero-scene{width:65%;inset:0 auto 0 0;z-index:0;background:#7fc8e8}
+.hero-scene img{width:100%;height:100%;object-fit:cover;object-position:36% 54%;filter:saturate(1.02) contrast(1.02)}
+.hero:after{z-index:1;background:linear-gradient(90deg,#eaf8ff00 0%,#eaf8ff12 30%,#eaf8ffb8 54%,#eaf8fff2 70%,#eaf8ff 100%)}
+.hero-ornament{z-index:2}
+.hero-copy{z-index:3}
+@media(max-width:680px){
+  .hero{min-height:245px}
+  .hero-scene{width:72%;inset:0 auto 0 0;opacity:1;clip-path:polygon(0 0,100% 0,91% 100%,0 100%)}
+  .hero-scene img{object-position:34% 52%}
+  .hero:after{background:linear-gradient(90deg,#eaf8ff00 0%,#eaf8ff0a 25%,#eaf8ffb8 52%,#eaf8fff0 69%,#eaf8ff 100%)}
+  .hero-copy{width:73%;min-height:245px}
+}
+@media(max-width:390px){
+  .hero-scene{width:76%}
+  .hero-scene img{object-position:32% 52%}
+  .hero-copy{width:78%}
+}
