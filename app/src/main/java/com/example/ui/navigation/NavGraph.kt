@@ -300,6 +300,7 @@ fun QuranRadioApp(
                     onCountryClick = { country ->
                         navController.navigate(Screen.CountryDetail.createRoute(country.code))
                     },
+                    onBack = { navController.popBackStack() },
                     modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
                 )
             }
@@ -329,6 +330,7 @@ fun QuranRadioApp(
                         viewModel.playStation(station)
                         navController.navigate(Screen.FullPlayer.route)
                     },
+                    onBack = { navController.popBackStack() },
                     modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
                 )
             }
@@ -377,6 +379,7 @@ fun QuranRadioApp(
             composable(Screen.Favorites.route) {
                 FavoritesScreen(
                     viewModel = viewModel,
+                    onBack = { navController.popBackStack() },
                     modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
                 )
             }
