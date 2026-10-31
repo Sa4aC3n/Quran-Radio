@@ -523,7 +523,7 @@ private fun CairoRadioHeroCard(
         shape = RoundedCornerShape(24.dp),
         color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, Color(0xFFCAE7F5)),
-        shadowElevation = 3.dp
+        shadowElevation = 4.dp
     ) {
         Box(
             modifier = Modifier
@@ -539,15 +539,15 @@ private fun CairoRadioHeroCard(
             Box(
                 modifier = Modifier.matchParentSize().background(
                     Brush.horizontalGradient(
-                        listOf(Color.Transparent, Color(0x22FFFFFF), Color(0xBFFFFFFF), Color(0xF2FFFFFF))
+                        listOf(Color.Transparent, Color(0x22FFFFFF), Color(0xBFFFFFFF), Color(0xF5FFFFFF))
                     )
                 )
             )
             Column(
                 modifier = Modifier
-                    .fillMaxWidth(0.76f)
+                    .fillMaxWidth(0.82f)
                     .align(Alignment.CenterEnd)
-                    .padding(16.dp),
+                    .padding(start = 10.dp, end = 16.dp, top = 15.dp, bottom = 15.dp),
                 horizontalAlignment = Alignment.End
             ) {
                 Surface(
@@ -557,64 +557,92 @@ private fun CairoRadioHeroCard(
                     Text(
                         text = "الإذاعة الرئيسية",
                         color = Color.White,
-                        fontSize = 11.sp,
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
                     )
                 }
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(9.dp))
                 Text(
                     text = "إذاعة القرآن الكريم من القاهرة",
+                    modifier = Modifier.fillMaxWidth(),
                     color = Color(0xFF124A78),
-                    fontSize = 21.sp,
-                    fontWeight = FontWeight.ExtraBold
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Right,
+                    maxLines = 1,
+                    softWrap = false
                 )
                 Text(
-                    text = "صوت القرآن.. يملأ حياتك نورًا",
+                    text = "الهيئة العامة للإذاعة والتلفزيون",
+                    modifier = Modifier.fillMaxWidth(),
                     color = Color(0xFF527B98),
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Right
                 )
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(13.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Right side: station identity and live status.
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = if (isPlaying) "يعمل الآن" else "بث مباشر",
+                                color = if (isPlaying) Color(0xFF16845B) else Color(0xFF124A78),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
+                            )
+                            Text(
+                                text = "استمع إلى إذاعة القرآن",
+                                color = Color(0xFF527B98),
+                                fontSize = 9.sp
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(CircleShape)
+                                .background(Color(0x22168BC8)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Mosque,
+                                contentDescription = "إذاعة القرآن الكريم",
+                                tint = Color(0xFF168BC8),
+                                modifier = Modifier.size(23.dp)
+                            )
+                        }
+                    }
+                    // Left side: prominent modern play control.
                     Surface(
                         onClick = onPlay,
                         shape = CircleShape,
                         color = Color(0xFF168BC8),
-                        modifier = Modifier.size(54.dp),
-                        shadowElevation = 3.dp
+                        modifier = Modifier.size(52.dp),
+                        shadowElevation = 5.dp
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.linearGradient(
+                                        listOf(Color(0xFF35B4E8), Color(0xFF0878B8))
+                                    )
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Icon(
                                 imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                                 contentDescription = if (isPlaying) "إيقاف مؤقت" else "تشغيل إذاعة القاهرة",
                                 tint = Color.White,
-                                modifier = Modifier.size(30.dp)
-                            )
-                        }
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Mosque,
-                            contentDescription = null,
-                            tint = Color(0xFF168BC8),
-                            modifier = Modifier.size(42.dp)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(
-                                text = if (isPlaying) "يعمل الآن" else "استمع مباشرة",
-                                color = Color(0xFF124A78),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp
-                            )
-                            Text(
-                                text = "بث إذاعة القرآن الكريم",
-                                color = Color(0xFF527B98),
-                                fontSize = 10.sp
+                                modifier = Modifier.size(29.dp)
                             )
                         }
                     }
