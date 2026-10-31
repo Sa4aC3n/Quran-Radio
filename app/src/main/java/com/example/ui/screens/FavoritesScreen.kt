@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -39,6 +41,7 @@ import com.example.viewmodel.RadioViewModel
 @Composable
 fun FavoritesScreen(
     viewModel: RadioViewModel,
+    onBack: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val favoriteStations by viewModel.favoriteStations.collectAsState()
@@ -47,6 +50,11 @@ fun FavoritesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "رجوع")
+                    }
+                },
                 title = {
                     Text(
                         text = "${appString(StringKey.FAVORITES_TITLE)} (${favoriteStations.size})",
