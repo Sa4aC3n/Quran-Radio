@@ -120,6 +120,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier
 ) {
     val searchResults by viewModel.searchResults.collectAsState()
+    val allStations by viewModel.allStations.collectAsState()
     val selectedCategory by viewModel.selectedCategory.collectAsState()
     val playerState by viewModel.playerState.collectAsState()
     val currentLanguage by viewModel.appLanguage.collectAsState()
@@ -344,14 +345,17 @@ fun HomeScreen(
                 HomeCategoryGrid(
                     onCountries = onNavigateToCountries,
                     onReciters = onNavigateToReciters,
-                    onQibla = onNavigateToQibla,
+                    onPlayBaqarah = {
+                        allStations.firstOrNull { it.id == "station_albaqarah" }?.let { viewModel.playStation(it) }
+                    },
                     onOpenCategory = onOpenCategory
                 )
             }
             item {
                 HomePrayerCards(
                     onPrayerTimes = onNavigateToPrayer,
-                    onAdhanSettings = onNavigateToPrayer
+                    onAdhanSettings = onNavigateToPrayer,
+                    onQibla = onNavigateToQibla
                 )
             }
             item {
@@ -662,7 +666,7 @@ private data class HomeCategoryAction(
 private fun HomeCategoryGrid(
     onCountries: () -> Unit,
     onReciters: () -> Unit,
-    onQibla: () -> Unit,
+    onPlayBaqarah: () -> Unit,
     onOpenCategory: (StationCategory) -> Unit
 ) {
     val actions = listOf(
@@ -677,7 +681,7 @@ private fun HomeCategoryGrid(
         HomeCategoryAction("الفتاوى والأحكام", Icons.Default.Balance) { onOpenCategory(StationCategory.FATWA) },
         HomeCategoryAction("أذكار الصباح والمساء", Icons.Default.WbSunny) { onOpenCategory(StationCategory.ADHKAR) },
         HomeCategoryAction("الرقية الشرعية", Icons.Default.Spa) { onOpenCategory(StationCategory.RUQYAH) },
-        HomeCategoryAction("القبلة", Icons.Default.Explore, onQibla)
+        HomeCategoryAction("إذاعة سورة البقرة", Icons.Default.MenuBook, onPlayBaqarah)
     )
     Column(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
@@ -742,7 +746,8 @@ private fun HomeCategoryGrid(
 @Composable
 private fun HomePrayerCards(
     onPrayerTimes: () -> Unit,
-    onAdhanSettings: () -> Unit
+    onAdhanSettings: () -> Unit,
+    onQibla: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -769,6 +774,14 @@ private fun HomePrayerCards(
             icon = Icons.Default.NotificationsActive,
             dark = false,
             onClick = onAdhanSettings,
+            modifier = Modifier.weight(1f)
+        )
+        HomeFeatureActionCard(
+            title = "القبلة",
+            subtitle = "تحديد اتجاه القبلة",
+            icon = Icons.Default.Explore,
+            dark = false,
+            onClick = onQibla,
             modifier = Modifier.weight(1f)
         )
         }
