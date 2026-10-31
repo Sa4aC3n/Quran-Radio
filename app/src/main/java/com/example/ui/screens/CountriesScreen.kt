@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.ViewCompact
@@ -68,6 +69,7 @@ import com.example.viewmodel.RadioViewModel
 fun CountriesScreen(
     viewModel: RadioViewModel,
     onCountryClick: (Country) -> Unit,
+    onBack: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val countries by viewModel.countries.collectAsState()
@@ -83,6 +85,11 @@ fun CountriesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "رجوع")
+                    }
+                },
                 title = {
                     Text(
                         text = appString(StringKey.COUNTRIES_TITLE),
