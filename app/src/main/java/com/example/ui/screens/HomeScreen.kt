@@ -121,8 +121,6 @@ fun HomeScreen(
 ) {
     val searchResults by viewModel.searchResults.collectAsState()
     val selectedCategory by viewModel.selectedCategory.collectAsState()
-    val countries by viewModel.countries.collectAsState()
-    val reciters by viewModel.reciters.collectAsState()
     val playerState by viewModel.playerState.collectAsState()
     val currentLanguage by viewModel.appLanguage.collectAsState()
     val seasonState = prayerViewModel?.islamicSeasonState?.collectAsState()?.value
@@ -446,120 +444,6 @@ fun HomeScreen(
         }
 
 
-        // 4. Quick Nav Discovery Cards (Countries & Reciters)
-        if (selectedCategory == null) {
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Countries Card
-                    Surface(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(20.dp))
-                            .clickable { onNavigateToCountries() }
-                            .testTag("home_quick_countries"),
-                        shape = RoundedCornerShape(20.dp),
-                        color = MaterialTheme.colorScheme.surface,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                        shadowElevation = 1.dp
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(42.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(MaterialTheme.colorScheme.primaryContainer),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Public,
-                                    contentDescription = null,
-                                    tint = SkyBluePrimary,
-                                    modifier = Modifier.size(22.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Text(
-                                    text = appString(StringKey.HOME_BY_COUNTRIES),
-                                    style = MaterialTheme.typography.titleSmall.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        fontSize = 13.sp
-                                    )
-                                )
-                                Text(
-                                    text = appString(StringKey.HOME_ISLAMIC_COUNTRIES_COUNT, countries.size),
-                                    style = MaterialTheme.typography.bodySmall.copy(
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontSize = 10.sp
-                                    )
-                                )
-                            }
-                        }
-                    }
-
-                    // Reciters Card
-                    Surface(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(20.dp))
-                            .clickable { onNavigateToReciters() }
-                            .testTag("home_quick_reciters"),
-                        shape = RoundedCornerShape(20.dp),
-                        color = MaterialTheme.colorScheme.surface,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                        shadowElevation = 1.dp
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(42.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(MaterialTheme.colorScheme.primaryContainer),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Mic,
-                                    contentDescription = null,
-                                    tint = SkyBluePrimary,
-                                    modifier = Modifier.size(22.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Text(
-                                    text = appString(StringKey.HOME_TOP_RECITERS),
-                                    style = MaterialTheme.typography.titleSmall.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        fontSize = 13.sp
-                                    )
-                                )
-                                Text(
-                                    text = appString(StringKey.HOME_AUTHENTIC_RECITERS_COUNT, reciters.size),
-                                    style = MaterialTheme.typography.bodySmall.copy(
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontSize = 10.sp
-                                    )
-                                )
-                            }
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(14.dp))
-            }
-        }
 
 
     }
@@ -754,6 +638,8 @@ private fun HomeCategoryGrid(
     onOpenCategory: (StationCategory) -> Unit
 ) {
     val actions = listOf(
+        HomeCategoryAction("إذاعات القراء", Icons.Default.Mic, onReciters),
+        HomeCategoryAction("إذاعات الدول", Icons.Default.Public, onCountries),
         HomeCategoryAction("إذاعات رسمية", Icons.Default.Radio) { onOpenCategory(StationCategory.OFFICIAL) },
         HomeCategoryAction("تلاوات خاشعة", Icons.Default.AutoStories) { onOpenCategory(StationCategory.RECITATION) },
         HomeCategoryAction("تفسير القرآن", Icons.Default.MenuBook) { onOpenCategory(StationCategory.TAFSIR) },
