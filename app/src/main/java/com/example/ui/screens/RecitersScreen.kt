@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Search
@@ -62,6 +63,7 @@ import com.example.viewmodel.RadioViewModel
 fun RecitersScreen(
     viewModel: RadioViewModel,
     onStationClick: (RadioStation) -> Unit,
+    onBack: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val stations by viewModel.allStations.collectAsState()
@@ -127,6 +129,11 @@ fun RecitersScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "رجوع")
+                    }
+                },
                 title = {
                     Text(
                         text = if (currentLanguage == com.example.localization.AppLanguage.AR)
